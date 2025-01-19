@@ -1,12 +1,12 @@
-const { StatusCodes } = require('http-status-codes')
+const { StatusCodes } = require('http-status-codes');
+
+const { SuccessResponse } = require('../utils/common');
 
 const info = (req, res) => {
-    return res.status(StatusCodes.OK).json({   // Returning Custoom Status Code For The API Request.
-        success : true,
-        message : "API is live",
-        error: {},
-        data: {},
-    })
+    SuccessResponse.message = "API is live";
+    return res
+            .status(StatusCodes.OK)   // Returning Custoom Status Code For The API Request.
+            .json({SuccessResponse}); 
 };
 
 module.exports = {
