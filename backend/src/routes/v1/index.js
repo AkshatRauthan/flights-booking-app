@@ -5,9 +5,12 @@ const router = express.Router();
 const { InfoController } = require('../../controllers');
 
 const AirplaneRoutes = require('./airplane-routes');
+const AirportRoutes = require('./airport-routes');
 const CityRoutes = require('./city-routes');
 
 router.use('/airplanes', AirplaneRoutes);
+
+router.use('/airport', AirportRoutes);
 
 router.use('/city', CityRoutes);
 
