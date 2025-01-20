@@ -11,8 +11,7 @@ module.exports = (sequelize, DataTypes) => {
             // define association here
         }
     }
-    Airplane.init(
-        {
+    Airplane.init({
             modelNumber: {
                 type: DataTypes.STRING,
                 allowNull: false,
@@ -28,8 +27,7 @@ module.exports = (sequelize, DataTypes) => {
                     max: 1000,
                 },
             },
-        },
-        {
+        }, {
             sequelize,
             modelName: "Airplane",
         }
