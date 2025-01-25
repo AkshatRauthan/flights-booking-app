@@ -6,7 +6,7 @@ const { ErrorResponse, SuccessResponse } = require('../utils/common');
 
 /*
  * POST : /airport
- * req-body : {name}
+ * req-body : {name, code, address, cityId}
 */
 async function createAirport(req, res){
     try {
@@ -70,6 +70,31 @@ async function getAirport(req, res) {
 }
 
 /*
+ * PATCH : /airport/:id
+ * req-body : {name, code, address, cityId}
+*/
+async function updateAirport(req, res){
+    try {
+        const response = await AirportServices.updateAirport(req.params.id, {
+            name: req.body.name,
+            code: req.body.code,
+            address: req.body.address,
+            cityId: req.body.cityId
+        });
+        SuccessResponse.message = "Successfully updated the airport";
+        SuccessResponse.data = response;
+        return res
+                .status(StatusCodes.CREATED)
+                .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
+/*
  * DELETE : /airport/:id
  * req-body : {}
 */
@@ -93,5 +118,6 @@ module.exports = {
     createAirport,
     getAirports,
     getAirport,
+    updateAirport,
     destroyAirport
 }

@@ -38,8 +38,24 @@ async function getAirport(id){
     } catch (error) {
         if (error.statusCode == StatusCodes.NOT_FOUND){
             throw new AppError('Airport with the requested id do not exists', error.statusCode);
-        } 
+        }
         throw new AppError('Cannot fetch the data of requested airport', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
+async function updateAirport(id, data) {
+    try {
+        const airport = await airportRepository.update(id, data);
+        return airport;
+    } catch (error) {
+        if (['SequelizeValidationError', 'SequelizeUniqueConstraintError'].includes(error.name) || error.statusCode == StatusCodes.NOT_FOUND) {
+            let explanation = [];
+            error.errors.forEach((err) => {
+                explanation.push(err.message);
+            });
+            throw new AppError(explanation, StatusCodes.BAD_REQUEST);
+        }
+        else throw new AppError('Cannot update the data of requested airport', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
@@ -60,5 +76,6 @@ module.exports = {
     createAirport,
     getAirports,
     getAirport,
+    updateAirport,
     destroyAirport
 };

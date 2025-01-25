@@ -1,4 +1,4 @@
-const { AirportController } = require('../../controllers');
+const { AirportController, AirplaneController } = require('../../controllers');
 
 const { AirportMiddleware } = require('../../middlewares/index');
 
@@ -17,9 +17,14 @@ router.get('/',
         AirportController.getAirports
 );
 
-// api/v1/airport/:id POST
+// api/v1/airport/:id GET
 router.get('/:id',
         AirportController.getAirport
+);
+
+// api/v1/airport/:id PATCH
+router.patch('/:id',
+        AirplaneController.updateAirplane
 );
 
 // api/v1/airport/:id DELETE
