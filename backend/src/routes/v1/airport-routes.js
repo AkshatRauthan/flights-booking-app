@@ -1,4 +1,4 @@
-const { AirportController, AirplaneController } = require('../../controllers');
+const { AirportController } = require('../../controllers');
 
 const { AirportMiddleware } = require('../../middlewares/index');
 
@@ -24,7 +24,8 @@ router.get('/:id',
 
 // api/v1/airport/:id PATCH
 router.patch('/:id',
-        AirplaneController.updateAirplane
+        AirportMiddleware.validateUpdateObject,
+        AirportController.updateAirport
 );
 
 // api/v1/airport/:id DELETE
