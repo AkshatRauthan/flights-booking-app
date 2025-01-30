@@ -12,10 +12,12 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey:'airplaneId'
             });
             this.belongsTo(models.Airport, {
-                foreignKey:'arrivalAirportId'
+                foreignKey:'arrivalAirportId',
+                as: 'arrivalAirport', // When creating Joins, the data object fetched from Airport will be named as arrivalAirport
             });
             this.belongsTo(models.Airport, {
-                foreignKey:'departureAirportId'
+                foreignKey:'departureAirportId',
+                as: 'departureAirport',
             });
         }
     }
