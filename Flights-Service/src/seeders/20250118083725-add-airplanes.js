@@ -14,14 +14,12 @@ module.exports = {
          *   isBetaMember: false
          * }], {});
          */
-        await queryInterface.bulkInsert("Airplanes", [
-            {
+        await queryInterface.bulkInsert("Airplanes", [{
                 modelNumber: "airbus340",
                 capacity: 250,
                 createdAt: new Date(),
                 updatedAt: new Date(),
-            },
-            {
+            },{
                 modelNumber: "boeing777",
                 capacity: 450,
                 createdAt: new Date(),
