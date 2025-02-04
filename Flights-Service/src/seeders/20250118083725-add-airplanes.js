@@ -1,44 +1,84 @@
 "use strict";
-
 const { Op } = require("sequelize");
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        /**
-         * Add seed commands here.
-         *
-         * Example:
-         * await queryInterface.bulkInsert('People', [{
-         *   name: 'John Doe',
-         *   isBetaMember: false
-         * }], {});
-         */
         await queryInterface.bulkInsert("Airplanes", [{
-                modelNumber: "airbus340",
-                capacity: 250,
-                createdAt: new Date(),
-                updatedAt: new Date(),
-            },{
-                modelNumber: "boeing777",
-                capacity: 450,
+                modelNumber: "airbusA320",
+                capacity: 180,
                 createdAt: new Date(),
                 updatedAt: new Date(),
             },
+            {
+                modelNumber: "boeing737",
+                capacity: 210,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "boeing747",
+                capacity: 410,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "airbusA350",
+                capacity: 440,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "boeing787",
+                capacity: 296,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "airbusA380",
+                capacity: 850,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "boeing777",
+                capacity: 396,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "embraerE190",
+                capacity: 114,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "bombardierCRJ900",
+                capacity: 90,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+            {
+                modelNumber: "boeing757",
+                capacity: 239,
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            }
         ]);
     },
 
     async down(queryInterface, Sequelize) {
-        /**
-         * Add commands to revert seed here.
-         *
-         * Example:
-         * await queryInterface.bulkDelete('People', null, {});
-         */
         await queryInterface.bulkDelete("Airplanes", {
             [Op.or]: [
-                { modelNumber: "airbus340" },
+                { modelNumber: "airbusA320" },
+                { modelNumber: "boeing737" },
+                { modelNumber: "boeing747" },
+                { modelNumber: "airbusA350" },
+                { modelNumber: "boeing787" },
+                { modelNumber: "airbusA380" },
                 { modelNumber: "boeing777" },
+                { modelNumber: "embraerE190" },
+                { modelNumber: "bombardierCRJ900" },
+                { modelNumber: "boeing757" }
             ],
         });
     },

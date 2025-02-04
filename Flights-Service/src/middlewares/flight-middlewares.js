@@ -6,9 +6,9 @@ const AppError = require('../utils/errors/app-error');
 
 function validateCreateObject(req, res, next){
     const { flightNumber, airplaneId, departureAirportId, arrivalAirportId, 
-            arrivalTime, departureTime, price, boardingGate, totalSeats } = req.body;
+            arrivalTime, departureTime, price, boardingGate } = req.body;
 
-    if (!(flightNumber && airplaneId && departureAirportId && arrivalAirportId && arrivalTime && departureTime && price && totalSeats)){
+    if (!(flightNumber && airplaneId && departureAirportId && arrivalAirportId && arrivalTime && departureTime && price)){
         let explanation = [];
         if (!flightNumber) explanation.push('Flight number not present in the incoming request in the correct format');
         if (!airplaneId) explanation.push('Airplane id not present in the incoming request in the correct format');
@@ -17,8 +17,7 @@ function validateCreateObject(req, res, next){
         if (!arrivalTime) explanation.push('Arrival time not present in the incoming request in the correct format');
         if (!departureTime) explanation.push('Departure time not present in the incoming request in the correct format');
         if (!price) explanation.push('Price not present in the incoming request in the correct format');
-        if (!totalSeats) explanation.push('Total seat number not present in the incoming request in the correct format');
-        ErrorResponse.message = 'Something went wrong while creating the city';
+        ErrorResponse.message = 'Something went wrong while creating the flight';
         ErrorResponse.error = new AppError(explanation, StatusCodes.BAD_GATEWAY);
         return res
                 .status(StatusCodes.BAD_REQUEST)

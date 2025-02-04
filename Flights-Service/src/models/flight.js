@@ -1,12 +1,9 @@
 "use strict";
 const { Model } = require("sequelize");
+const AppError = require("../utils/errors/app-error");
+const { StatusCodes } = require("http-status-codes");
 module.exports = (sequelize, DataTypes) => {
     class Flight extends Model {
-        /**
-         * Helper method for defining associations.
-         * This method is not a part of Sequelize lifecycle.
-         * The `models/index` file will call this method automatically.
-         */
         static associate(models) {
             this.belongsTo(models.Airplane, {
                 foreignKey:'airplaneId'
@@ -60,7 +57,17 @@ module.exports = (sequelize, DataTypes) => {
     },{
         sequelize,
         modelName: "Flight",
-    }
-    );
+    });
+
+    Flight.beforeValidate(async (flight, options) => {
+        const { Airplane } = sequelize.models;
+        const airplane = await Airplane.findByPk(flight.airplaneId);
+        console.log(" Airplane Pre Hook Called\n");
+        console.log(" Airplane's capacity: ", airplane.capacity);
+        if (!airplane) {
+            throw new AppError('The requested airplane do not exists.', StatusCodes.BAD_REQUEST);
+        }
+        flight.totalSeats = airplane.capacity;
+    });
     return Flight;
 };
