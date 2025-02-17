@@ -17,8 +17,9 @@ function validateCreateObject(req, res, next){
         if (!arrivalTime) explanation.push('Arrival time not present in the incoming request in the correct format');
         if (!departureTime) explanation.push('Departure time not present in the incoming request in the correct format');
         if (!price) explanation.push('Price not present in the incoming request in the correct format');
+        
         ErrorResponse.message = 'Something went wrong while creating the flight';
-        ErrorResponse.error = new AppError(explanation, StatusCodes.BAD_GATEWAY);
+        ErrorResponse.error = new AppError(explanation, StatusCodes.BAD_REQUEST);
         return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json(ErrorResponse);
@@ -26,6 +27,15 @@ function validateCreateObject(req, res, next){
     else next();
 }
 
+function validateUpdateSeatsRequest(req, res, next) {
+    if (!req.body.seats){
+        ErrorResponse.message = 'Something went wrong while creating the flight';
+        ErrorResponse.error = new AppError(["Seats not found in the incomong request body"], StatusCodes.BAD_REQUEST);  
+    }
+    else next();
+}
+
 module.exports = {
     validateCreateObject,
+    validateUpdateSeatsRequest,
 }
