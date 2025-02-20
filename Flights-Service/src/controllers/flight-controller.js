@@ -3,7 +3,6 @@ const { StatusCodes } = require('http-status-codes');
 const { FlightServices } = require('../services');
 
 const { ErrorResponse, SuccessResponse } = require('../utils/common');
-const { AirplaneController } = require('.');
 
 /*
 POST : /flights
@@ -73,8 +72,9 @@ async function getAllFlights(req, res){
 }
 
 /*
- * POST : /flights/:id
- * req-body : {}
+POST : /flights/:id
+    req-body : {
+    }
 */
 async function getFlight(req, res) {
     try{
@@ -92,6 +92,13 @@ async function getFlight(req, res) {
     }
 }
 
+/*
+PATCH : /flights/seats/:flightid
+    req-body : {
+        seats : 10, [number of seats to add or remove]
+        dec : true / false, [weather to decrease seats or increase by above count]
+    }
+*/
 async function updateSeats(req, res) {
     let dec = req.body.dec;
     try {
