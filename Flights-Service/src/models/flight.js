@@ -62,8 +62,6 @@ module.exports = (sequelize, DataTypes) => {
     Flight.beforeValidate(async (flight, options) => {
         const { Airplane } = sequelize.models;
         const airplane = await Airplane.findByPk(flight.airplaneId);
-        console.log(" Airplane Pre Hook Called\n");
-        console.log(" Airplane's capacity: ", airplane.capacity);
         if (!airplane) {
             throw new AppError('The requested airplane do not exists.', StatusCodes.BAD_REQUEST);
         }
