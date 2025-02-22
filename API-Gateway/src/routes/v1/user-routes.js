@@ -8,4 +8,9 @@ router.post('/signup',
         UserController.createUser,
 );
 
+// /api/v1/user/signin POST
+router.post('/signin',
+        UserController.authenticateUser,
+);
+
 module.exports = router;

@@ -1,5 +1,9 @@
 "use strict";
 const { Model } = require("sequelize");
+
+const bycrypt = require("bcrypt");
+const ServerConfig = require("../config/server-config");
+
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         static associate(models) {
@@ -25,5 +29,10 @@ module.exports = (sequelize, DataTypes) => {
             modelName: "User",
         }
     );
+
+    User.beforeCreate(function encrypt(user) {
+        const encryptedPassword = bycrypt.hashSync(user.password, Number(ServerConfig.SALT_ROUNDS));
+        user.password = encryptedPassword;
+    })
     return User;
 };

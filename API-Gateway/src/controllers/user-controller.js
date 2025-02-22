@@ -17,6 +17,33 @@ async function createUser(req, res){
             password: req.body.password,
         });
         SuccessResponse.data = user;
+        SuccessResponse.message = 'User created successfully';
+        return res
+                .status(StatusCodes.CREATED)
+                .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
+/*
+POST : /signin
+    req-body : {
+        email: "alan123@gmail.com",
+        password: "1234",
+    }
+*/
+async function authenticateUser(req, res){
+    try {
+        const user = await UserService.authenticateUser({
+            email: req.body.email,
+            password: req.body.password,
+        });
+        SuccessResponse.data = user;
+        SuccessResponse.message = "User authenticated successfully";
         return res
                 .status(StatusCodes.CREATED)
                 .json(SuccessResponse);
@@ -30,4 +57,5 @@ async function createUser(req, res){
 
 module.exports = {
     createUser,
+    authenticateUser,
 };
