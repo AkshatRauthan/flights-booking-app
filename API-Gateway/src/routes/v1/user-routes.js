@@ -16,4 +16,10 @@ router.post('/signin',
         UserController.authenticateUser,
 );
 
+// /api/v1/user/test GET
+router.get('/test',
+        AuthMiddlewares.validateAuthToken,
+        UserController.testAuthentication,
+);
+
 module.exports = router;

@@ -40,14 +40,52 @@ async function authenticateUser(data) {
             }
         } 
     } catch (error) {
-        if (error instanceof AppError){
-            throw error;
-        }
+        if (error instanceof AppError) throw error;
         throw new AppError('Something Went Wrong', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
+async function isAuthenticated(token) {
+    try {
+        if (!token) {
+            throw new AppError('Authentication token missing in the request body', StatusCodes.BAD_REQUEST);
+        }
+        const response = await AuthFunctions.verifyToken(token);
+        const user = await userRepository.get(response.id);
+        if (!user) {
+            throw new AppError('No user found for the corresponding authentication token', StatusCodes.NOT_FOUND);
+        }
+        return {
+            user : {
+                id: user.dataValues.id,
+                email: user.dataValues.email,
+            }
+        };
+    } catch (error) {
+        if (error instanceof AppError) throw error;
+        if (error.name == 'JsonWebTokenError') throw new AppError('Invalid authentication token', StatusCodes.UNAUTHORIZED);
+        if (error.name == 'TokenExpiredError') throw new AppError('Authentication token has expired', StatusCodes.UNAUTHORIZED);
+        throw new AppError('Something went wrong', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
+async function testAuthentication(user) {
+    try {
+        if (!user) throw new AppError(['Someting went wrong after verifing authentication token','User details missing from request'], StatusCodes.INTERNAL_SERVER_ERROR);
+        return {
+            message: [
+                'The authentication token is working properly.',
+            ]
+        };
+    } catch (error) {
+        if (error instanceof AppError) throw error;
+        throw new AppError('Something went wrong', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
 module.exports = {
     createUser,
     authenticateUser,
+    isAuthenticated,
+    testAuthentication,
 }

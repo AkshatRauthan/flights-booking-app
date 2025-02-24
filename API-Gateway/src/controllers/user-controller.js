@@ -43,7 +43,7 @@ async function authenticateUser(req, res){
             password: req.body.password,
         });
         SuccessResponse.data = user;
-        SuccessResponse.message = "User authenticated successfully";
+        SuccessResponse.message = 'User authenticated successfully';
         return res
                 .status(StatusCodes.CREATED)
                 .json(SuccessResponse);
@@ -55,7 +55,31 @@ async function authenticateUser(req, res){
     }
 }
 
+/*
+GET : /test
+    req-headers : {
+        x-acccess-token: authentication-token-value
+    } 
+*/
+async function testAuthentication(req, res) {
+    try {
+        const response = await UserService.testAuthentication(req.user);
+        SuccessResponse.data = req.user;
+        SuccessResponse.message = response.message;
+        return res
+                .status(StatusCodes.CREATED)
+                .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
+
 module.exports = {
     createUser,
     authenticateUser,
+    testAuthentication,
 };
