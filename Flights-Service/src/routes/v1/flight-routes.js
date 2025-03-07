@@ -22,8 +22,8 @@ router.get('/:id',
         FlightController.getFlight
 )
 
-// /api/v1/flights/seats PATCH
-router.patch('/seats/:id',
+// /api/v1/flights/:id/seats PATCH
+router.patch('/:id/seats',
         FlightMiddleware.validateUpdateSeatsRequest,
         FlightController.updateSeats
 )

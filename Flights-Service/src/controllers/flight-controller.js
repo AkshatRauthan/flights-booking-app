@@ -105,7 +105,7 @@ async function updateSeats(req, res) {
         const response = await FlightServices.updateSeats({
             flightId: req.params.id,
             seats: req.body.seats,
-            dec: dec
+            dec: (dec === 'false' || dec === false) ? false : true,
         })
         SuccessResponse.message = "Successfully updates the seats data";
         SuccessResponse.data = response;

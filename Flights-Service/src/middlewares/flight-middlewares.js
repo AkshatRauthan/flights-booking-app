@@ -28,9 +28,16 @@ function validateCreateObject(req, res, next){
 }
 
 function validateUpdateSeatsRequest(req, res, next) {
-    if (!req.body.seats){
-        ErrorResponse.message = 'Something went wrong while creating the flight';
-        ErrorResponse.error = new AppError(["Seats not found in the incomong request body"], StatusCodes.BAD_REQUEST);  
+    if (!req.body.seats || req.body.seats < 0 || (req.body.dec && !([true, false, 'true', 'false'].includes(req.body.dec)))){
+        let explanation = [];
+        if (!req.body.seats) explanation.push("Seats count not found in the incomong request body");
+        if (req.body.seats < 0) explanation.push("Seats count cannot be negative");
+        if (!([true, false, "true", "false"].includes(req.body.dec))) explanation.push("Unexpected value for dec in the incoming request body");
+        ErrorResponse.message = 'Something went wrong while updating the flight';
+        ErrorResponse.error = new AppError(explanation, StatusCodes.BAD_REQUEST);
+        return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json(ErrorResponse);
     }
     else next();
 }
