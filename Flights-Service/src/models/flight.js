@@ -57,6 +57,7 @@ module.exports = (sequelize, DataTypes) => {
     },{
         sequelize,
         modelName: "Flight",
+        tableName: "flights"
     });
 
     Flight.beforeValidate(async (flight, options) => {

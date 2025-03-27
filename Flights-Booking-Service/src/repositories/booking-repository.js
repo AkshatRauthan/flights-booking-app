@@ -1,7 +1,9 @@
 const { Booking } = require('../models');
+const { Op } = require('sequelize');
 const { StatusCodes } = require('http-status-codes');
 const CrudRepository = require('./crud-repositories');
 const AppError = require('../utils/errors/app-error');
+const { BOOKED, CANCELLED } = require('../utils/common/enums').BOOKING_STATUS;
 
 class BookingRepository extends CrudRepository {
     constructor() {
@@ -30,6 +32,31 @@ class BookingRepository extends CrudRepository {
         if (!response || response[0] == 0){
             throw new AppError('Unable to find the corresponding booking data', StatusCodes.NOT_FOUND);
         }
+        return response;
+    }
+
+    async cancelOldBookings(timestamp){
+        const response = await Booking.update({status: CANCELLED},{
+            where : {
+                [Op.and]: [
+                    {
+                        createdAt: {
+                            [Op.lt]: timestamp
+                        }
+                    },
+                    {
+                        status: {
+                            [Op.not]: BOOKED
+                        }
+                    },
+                    {
+                        status: {
+                            [Op.not]: CANCELLED
+                        }
+                    }
+                ]
+            }
+        });
         return response;
     }
 }
