@@ -1,6 +1,8 @@
 const { StatusCodes } = require('http-status-codes');
 const { SuccessResponse, ErrorResponse } = require('../utils/common');
 const { BookingService } = require('../services');
+const { message } = require('../utils/common/error-response');
+const inMemDb = {};
 
 async function createBooking(req, res) {
     try {
@@ -23,11 +25,18 @@ async function createBooking(req, res) {
 
 async function makePayment(req, res) {
     try {
+        const idempotencyKey = req.headers('x-idempotency-key');
+        if (!idempotencyKey || inMemDb[idempotencyKey]){
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({message: 'The request is already precessed. Please do not retry'});
+        }
         const response = await BookingService.makePayment({
             bookingId: req.body.bookingId,
             userId: req.body.userId,
             totalCost: req.body.totalCost,
         })
+        inMemDb[idempotencyKey] = idempotencyKey;
         SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
