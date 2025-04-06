@@ -26,7 +26,12 @@ async function createBooking(req, res) {
 async function makePayment(req, res) {
     try {
         const idempotencyKey = req.headers('x-idempotency-key');
-        if (!idempotencyKey || inMemDb[idempotencyKey]){
+        if (!idempotencyKey){
+            return res
+                .status(StatusCodes.BAD_REQUEST)
+                .json({message: 'The Idempotency Key is missing from request.'});
+        }
+        if (inMemDb[idempotencyKey]){
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({message: 'The request is already precessed. Please do not retry'});

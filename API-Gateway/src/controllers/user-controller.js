@@ -16,7 +16,10 @@ async function createUser(req, res){
             email: req.body.email,
             password: req.body.password,
         });
-        SuccessResponse.data = user;
+        SuccessResponse.data = {
+            id: user.id,
+            email: user.email
+        };
         SuccessResponse.message = 'User created successfully';
         return res
                 .status(StatusCodes.CREATED)
