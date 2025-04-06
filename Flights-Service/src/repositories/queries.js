@@ -1,5 +1,5 @@
 function addingRowLockOnFlights(flightId){
-    return `SELECT * FROM FLIGHTS WHERE Flights.id = ${flightId} FOR UPDATE;`;
+    return `select * from flights where flights.id = ${flightId} for update;`;
 }
 
 module.exports = {
