@@ -14,8 +14,6 @@ async function createUser(data) {
     try {
         const user = await userRepository.create(data);
         const role =  await roleRepository.getRoleByName(CUSTOMER);
-        console.log(user)
-        console.log(role)
         user.addRole(role);
         return user;
     } catch (error) { 
