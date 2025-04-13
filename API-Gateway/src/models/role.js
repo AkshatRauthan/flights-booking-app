@@ -6,27 +6,30 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
     class Role extends Model {
         static associate(models) {
-            this.belongsToMany( models.User, {
-				through: models.User_Role,
-				as: 'user', 
-			})
+            this.belongsToMany(models.User, {
+                through: models.User_Role,
+                foreignKey: "roleId",
+                otherKey: "userId",
+                as: "users",
+            });
         }
     }
     Role.init(
         {
             name: {
-				type: DataTypes.ENUM({
-					values: [ADMIN, CUSTOMER, FLIGHT_COMPANY],
-				}),
-				allowNull: false,
-				defaultValue: CUSTOMER,
-			}
+                type: DataTypes.ENUM({
+                    values: [ADMIN, CUSTOMER, FLIGHT_COMPANY],
+                }),
+                allowNull: false,
+                defaultValue: CUSTOMER,
+            },
         },
         {
-            sequelize, 
+            sequelize,
             modelName: "Role",
             tableName: "roles",
         }
     );
+
     return Role;
 };

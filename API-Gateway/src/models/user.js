@@ -1,16 +1,17 @@
 "use strict";
 const { Model } = require("sequelize");
-
-const bycrypt = require("bcrypt");
+const bcrypt = require("bcrypt");
 const ServerConfig = require("../config/server-config");
 
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         static associate(models) {
-			this.belongsToMany( models.Role, {
-				through: models.User_Role,
-				as: 'role', 
-			})
+            this.belongsToMany(models.Role, {
+                through: models.User_Role,
+                foreignKey: "userId",
+                otherKey: "roleId",
+                as: "roles",
+            });
         }
     }
     User.init(
@@ -21,7 +22,7 @@ module.exports = (sequelize, DataTypes) => {
                 unique: true,
                 validate: {
                     isEmail: true,
-                }
+                },
             },
             password: {
                 type: DataTypes.STRING,
@@ -31,13 +32,14 @@ module.exports = (sequelize, DataTypes) => {
         {
             sequelize,
             modelName: "User",
-            tableName: "users"
+            tableName: "users",
         }
     );
 
-    User.beforeCreate(function encrypt(user) {
-        const encryptedPassword = bycrypt.hashSync(user.password, Number(ServerConfig.SALT_ROUNDS));
+    User.beforeCreate((user) => {
+        const encryptedPassword = bcrypt.hashSync(user.password, Number(ServerConfig.SALT_ROUNDS));
         user.password = encryptedPassword;
-    })
+    });
+
     return User;
 };
