@@ -5,7 +5,12 @@ const { ADMIN, CUSTOMER, FLIGHT_COMPANY } = ENUMS.USER_ROLES_ENUMS;
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
     class Role extends Model {
-        static associate(models) {}
+        static associate(models) {
+            this.belongsToMany( models.USER, {
+				through: models.User_Role,
+				as: 'user', 
+			})
+        }
     }
     Role.init(
         {

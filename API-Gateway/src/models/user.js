@@ -7,6 +7,10 @@ const ServerConfig = require("../config/server-config");
 module.exports = (sequelize, DataTypes) => {
     class User extends Model {
         static associate(models) {
+			this.belongsToMany( models.Role, {
+				through: models.User_Role,
+				as: 'role', 
+			})
         }
     }
     User.init(
