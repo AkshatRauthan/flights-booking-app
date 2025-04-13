@@ -49,7 +49,7 @@ async function isAuthenticated(token) {
     try {
         if (!token) {
             throw new AppError('Authentication token missing in the request body', StatusCodes.BAD_REQUEST);
-        }
+        }  
         const response = await AuthFunctions.verifyToken(token);
         const user = await userRepository.get(response.id);
         if (!user) {
