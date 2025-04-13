@@ -13,11 +13,11 @@ module.exports = (sequelize, DataTypes) => {
     }
     User_Role.init(
         {
-            user_id: {
+            userId: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
-            role_id:{
+            roleId:{
                 type: DataTypes.INTEGER,
                 allowNull: false,
             }
@@ -25,7 +25,7 @@ module.exports = (sequelize, DataTypes) => {
         {
             sequelize,
             modelName: "User_Role",
-            tableName: "user_role",
+            tableName: "user_roles",
         }
     );
     return User_Role;
