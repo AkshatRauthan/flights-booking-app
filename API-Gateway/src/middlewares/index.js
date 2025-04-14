@@ -1,3 +1,4 @@
 module.exports = {
-    AuthMiddlewares: require('./auth-middlewares'),
+    AuthenticationMiddlewares: require('./authentication-middlewares'),
+    AuthorizationMiddlewares: require('./authorization-middlewares'),
 }

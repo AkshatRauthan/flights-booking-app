@@ -25,7 +25,8 @@ async function validateAuthToken(req, res, next) {
     try {
         const response = await UserService.isAuthenticated(req.headers['x-access-token']);
         if (response) {
-            req.user = response; // Setting the User ID in the req object
+            req.user = response.user; // Setting the User ID in the req object
+            // { user: { id: 6, email: 'akshatrauthan1234@gmail.com' } }
             next();
         }
     } catch (error) {

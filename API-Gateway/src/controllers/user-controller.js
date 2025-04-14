@@ -80,9 +80,35 @@ async function testAuthentication(req, res) {
     }
 }
 
+/*
+POST : /role
+    req-body : {
+        id: 1,
+        roleName: "admin" Or "customer" Or "flight_company"
+    }
+*/
+async function addRoleToUser(req, res){
+    try {
+        const user = await UserService.addRoleToUser({
+            userId: req.body.id,
+            roleName: req.body.roleName,
+        });
+        SuccessResponse.data = user;
+        SuccessResponse.message = 'Role Added to User Successfully';
+        return res
+                .status(StatusCodes.CREATED)
+                .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
 
 module.exports = {
     createUser,
     authenticateUser,
     testAuthentication,
+    addRoleToUser
 };
