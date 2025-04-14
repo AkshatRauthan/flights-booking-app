@@ -12,16 +12,5 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', apiRoutes);
 
 app.listen(ServerConfig.PORT, async () => {
-    console.log(`Successfully started the server on port ${ServerConfig.PORT}`);
-    try {
-        const response = await mailsender.sendMail({
-            from: ServerConfig.GMAIL_EMAIL,
-            to: 'akshatrauthan9433@gmail.com',
-            subject: 'Working????',
-            text: 'Hell Yeah.............'
-        });
-        console.log(response);
-    } catch (error) {
-        console.log(error);
-    }
+    console.log(`\nSuccessfully started the server on port ${ServerConfig.PORT}`);
 });

@@ -1,9 +1,8 @@
 const express = require("express");
-
 const router = express.Router();
 
-const { InfoController } = require('../../controllers');
+const EmailRoutes = require("./email-router")
 
-router.get('/info', InfoController.info);
+router.use('/', EmailRoutes);
 
 module.exports = router;

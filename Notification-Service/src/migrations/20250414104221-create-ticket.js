@@ -6,7 +6,7 @@ const { PENDING, SUCCESS, FAILED } = ENUMS.TICKET_STATUS_ENUMS;
 
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable("Tickets", {
+        await queryInterface.createTable("tickets", {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -27,9 +27,8 @@ module.exports = {
             },
             status: {
                 type: Sequelize.ENUM,
-                allowNull: false,
                 values: [PENDING, SUCCESS, FAILED],
-                defaultValue: PENDING,
+                allowNull: false,
             },
             createdAt: {
                 allowNull: false,
@@ -42,6 +41,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable("Tickets");
+        await queryInterface.dropTable("tickets");
     },
 };

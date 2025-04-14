@@ -23,15 +23,17 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 			},
             status: {
-				types: DataTypes.ENUMS,
+				type: DataTypes.ENUM({
+                    values: [PENDING, SUCCESS, FAILED]
+                }),
 				allowNull: false,
-				values: [PENDING, SUCCESS, FAILED],
 				defaultValue: PENDING,
 			},
         }, 
         {
             sequelize,
             modelName: "Ticket",
+            tableName: "tickets",
         }
     );
     return Ticket;

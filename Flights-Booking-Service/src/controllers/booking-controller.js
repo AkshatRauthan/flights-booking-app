@@ -34,7 +34,7 @@ async function makePayment(req, res) {
         if (inMemDb[idempotencyKey]){
             return res
                 .status(StatusCodes.BAD_REQUEST)
-                .json({message: 'The request is already precessed. Please do not retry'});
+                .json({message: 'The request is already been processed. Please do not retry'});
         }
         const response = await BookingService.makePayment({
             bookingId: req.body.bookingId,
