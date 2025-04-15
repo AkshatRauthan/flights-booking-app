@@ -125,6 +125,22 @@ async function isAdmin(userId){
     }
 }
 
+async function getUserEmailById(data){
+    try {
+        const user = await userRepository.get(data.userId);
+        if (!user){
+            throw new AppError('No user found with the given Id', StatusCodes.NOT_FOUND);
+        }
+        return {
+            email: user.email
+        };
+    } catch (error) {
+        if (error instanceof AppError) throw error;
+        console.log(error);
+        throw new AppError('Something went wrong', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
 module.exports = {
     createUser,
     authenticateUser,
@@ -132,4 +148,5 @@ module.exports = {
     testAuthentication,
     addRoleToUser,
     isAdmin,
+    getUserEmailById,
 }

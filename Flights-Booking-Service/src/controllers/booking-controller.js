@@ -1,7 +1,6 @@
 const { StatusCodes } = require('http-status-codes');
 const { SuccessResponse, ErrorResponse } = require('../utils/common');
 const { BookingService } = require('../services');
-const { message } = require('../utils/common/error-response');
 const inMemDb = {};
 
 async function createBooking(req, res) {
@@ -25,7 +24,9 @@ async function createBooking(req, res) {
 
 async function makePayment(req, res) {
     try {
-        const idempotencyKey = req.headers('x-idempotency-key');
+        console.log("Hello");
+        const idempotencyKey = req.headers['x-idempotency-key'];
+        console.log("Idempotency Key :",idempotencyKey);
         if (!idempotencyKey){
             return res
                 .status(StatusCodes.BAD_REQUEST)
@@ -56,5 +57,5 @@ async function makePayment(req, res) {
 
 module.exports = {
     createBooking,
-    makePayment
+    makePayment,
 }

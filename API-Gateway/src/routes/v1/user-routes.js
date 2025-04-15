@@ -29,4 +29,9 @@ router.post('/role',
         UserController.addRoleToUser,
 )
 
+// /api/v1/user/:id/email GET
+router.get('/:id/email',
+        UserController.getUserEmailById,
+)
+
 module.exports = router;

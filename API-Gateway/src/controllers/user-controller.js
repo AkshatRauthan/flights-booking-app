@@ -106,9 +106,32 @@ async function addRoleToUser(req, res){
     }
 }
 
+/*
+GET : /:id/email
+    To fetch the email of users to send them emails.
+*/
+async function getUserEmailById(req, res){
+    try {
+        const response = await UserService.getUserEmailById({
+            userId: req.params.id,
+        });
+        SuccessResponse.data = response;
+        SuccessResponse.message = 'Email found successfully';
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
 module.exports = {
     createUser,
     authenticateUser,
     testAuthentication,
-    addRoleToUser
+    addRoleToUser,
+    getUserEmailById,
 };

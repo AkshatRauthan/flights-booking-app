@@ -1,10 +1,12 @@
 const axios = require("axios");
 const db = require("../models");
-const { ServerConfig } = require("../config");
-const { BookingRepository } = require("../repositories");
-const AppError = require("../utils/errors/app-error");
 const { StatusCodes } = require("http-status-codes");
+
 const { ENUMS } = require("../utils/common");
+const { ServerConfig, Queue } = require("../config");
+const AppError = require("../utils/errors/app-error");
+const { BookingRepository } = require("../repositories");
+const { getEmailById } = require("../utils/common/helpers/fetch-email");
 
 const { BOOKING_STATUS } = ENUMS;
 
@@ -26,7 +28,6 @@ async function createBooking(data) {
             seats: data.noOfSeats,
             dec: true
         });
-        
         await transaction.commit();
         return booking;
     } catch (error) {
@@ -38,19 +39,23 @@ async function createBooking(data) {
 
 async function makePayment(data) {
     const transaction = await db.sequelize.transaction();
-    console.log(data);
+    // console.log(data);
     try {
         const bookingDetails = await bookingRepository.get(data.bookingId, transaction);
         const currentTime = new Date();
         const bookingTime = new Date(bookingDetails.createdAt);
+        // console.log(bookingDetails);
         if (bookingDetails.status == BOOKING_STATUS.CANCELLED){
             throw new AppError("Booking is already cancelled", StatusCodes.BAD_REQUEST);
         }
-        if (currentTime - bookingTime > 30000){
-            console.log("Current Time: ", currentTime);
+        if (currentTime - bookingTime > 900000){ // 15 minute window in milliseconds => 900000ms
+            console.log("\nCurrent Time: ", currentTime);
             console.log("Booking Time: ", bookingTime);
             console.log(currentTime - bookingTime);
-            await cancelBooking(data.bookingId);
+            await cancelBooking({
+                bookingId: data.bookingId, 
+                flightId: bookingDetails.flightId
+            });
             throw new AppError("Your booking has expired", StatusCodes.REQUEST_TIMEOUT);
         }
         if (bookingDetails.totalCost != data.totalCost){
@@ -62,28 +67,38 @@ async function makePayment(data) {
         // Assume that payment is successfull
         // So now Booking is completed so convert it into BOOKED.
         await bookingRepository.update(data.bookingId, {status: BOOKING_STATUS.BOOKED }, transaction);
+        const response = (await getEmailById(data.userId)).data;
+        console.log('\nresponse')
+        console.log(response);
+        Queue.sendData({
+            recipientEmail: response.data.email,
+            subject: "Flight booked",
+            content: `Flight Booked For FlightID : ${bookingDetails.flightId} with BookingID : ${data.bookingId}`
+        })
         await transaction.commit();
         return await bookingRepository.get(data.bookingId);
     } catch (error) {
-        await transaction.rollback();
         console.log(error);
+        await transaction.rollback();
         throw error;
     }
 }
 
-async function cancelBooking(bookingId){
+async function cancelBooking(data){
     const transaction = await db.sequelize.transaction();
     try {
-        const bookingDetails = await bookingRepository.get(bookingId, transaction);
+        const bookingDetails = await bookingRepository.get(data.bookingId, transaction);
         if (bookingDetails.status == BOOKING_STATUS.CANCELLED){
             await transaction.commit();
+            console.log("Booking is already cancelled");
             return true;    
         }
         await axios.patch(`${ServerConfig.FLIGHT_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
-            seats: bookingDetails.totalSeats,
+            seats: bookingDetails.noOfSeats,
             dec: false
         });
-        await bookingDetails.update(bookingId, {status: BOOKING_STATUS.CANCELLED}, transaction);
+        bookingDetails.status = BOOKING_STATUS.CANCELLED;
+        await bookingDetails.save({ transaction });
         await transaction.commit();
     } catch (error) {
         console.log(error);
@@ -107,4 +122,5 @@ module.exports = {
     createBooking,
     makePayment,
     cancelOldBookings,
+    cancelBooking
 }

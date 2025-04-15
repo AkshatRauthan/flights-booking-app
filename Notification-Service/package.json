@@ -9,6 +9,7 @@
   "author": "Akshat",
   "license": "ISC",
   "dependencies": {
+    "amqplib": "^0.10.7",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "http-status-codes": "^2.3.0",

@@ -15,7 +15,7 @@ async function createTicket(req, res){
         return res
                 .status(StatusCodes.OK)
                 .json(SuccessResponse);
-    } catch (error) {
+    } catch (error) { 
         ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
