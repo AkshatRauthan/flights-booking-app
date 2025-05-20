@@ -3,7 +3,7 @@
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.addConstraint('Airports',{
+        await queryInterface.addConstraint('airports',{
             type: 'FOREIGN KEY',
             fields: ['cityId'],
             name: 'city_fkey_constraint',
@@ -16,6 +16,6 @@ module.exports = {
     },
 
     async down(queryInterface, Sequelize) {
-        await queryInterface.removeConstraint('Airports', 'city_fkey_constraint');
+        await queryInterface.removeConstraint('airports', 'city_fkey_constraint');
     },
 };

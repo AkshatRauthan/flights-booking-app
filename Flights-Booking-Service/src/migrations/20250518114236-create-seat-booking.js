@@ -1,27 +1,15 @@
 "use strict";
-
-const { ENUMS } = require("../utils/common");
-const { BOOKED, CANCELLED, INITIATED, PENDING } = ENUMS.BOOKING_STATUS;
-
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable("bookings", {
+        await queryInterface.createTable("seat_bookings", {
             id: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
                 type: Sequelize.INTEGER,
             },
-            flightId: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                references: {
-                    model: "flights",
-                    key: "id",
-                }
-            },
-            userId: {
+            user_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
                 references: {
@@ -29,20 +17,29 @@ module.exports = {
                     key: "id",
                 }
             },
-            status: {
-                type: Sequelize.ENUM,
-                values: [ BOOKED, CANCELLED, INITIATED, PENDING ],
-                allowNull: false,
-                defaultValue: INITIATED,
-            },
-            totalCost: {
+            seat_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
+                references: {
+                    model: "seats",
+                    key: "id",
+                }
             },
-            noOfSeats: {
+            booking_id: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                defaultValue: 1,
+                references: {
+                    model: "bookings",
+                    key: "id",
+                }
+            },
+            flight_id: {
+                type: Sequelize.INTEGER,
+                allowNull: false,
+                references: {
+                    model: "flights",
+                    key: "id",
+                }
             },
             createdAt: {
                 allowNull: false,
@@ -53,8 +50,14 @@ module.exports = {
                 type: Sequelize.DATE,
             },
         });
+        await queryInterface.addIndex("seat_bookings", {
+            unique: true,
+            fields: ["seat_id", "flight_id"],
+            name: "unique_seat_flight",
+        })
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable("bookings");
+        await queryInterface.removeIndex("seat_bookings", "unique_seat_flight");
+        await queryInterface.dropTable("seat_bookings");
     },
 };

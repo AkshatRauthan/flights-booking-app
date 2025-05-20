@@ -39,12 +39,10 @@ async function createBooking(data) {
 
 async function makePayment(data) {
     const transaction = await db.sequelize.transaction();
-    // console.log(data);
     try {
         const bookingDetails = await bookingRepository.get(data.bookingId, transaction);
         const currentTime = new Date();
         const bookingTime = new Date(bookingDetails.createdAt);
-        // console.log(bookingDetails);
         if (bookingDetails.status == BOOKING_STATUS.CANCELLED){
             throw new AppError("Booking is already cancelled", StatusCodes.BAD_REQUEST);
         }
@@ -68,8 +66,6 @@ async function makePayment(data) {
         // So now Booking is completed so convert it into BOOKED.
         await bookingRepository.update(data.bookingId, {status: BOOKING_STATUS.BOOKED }, transaction);
         const response = (await getEmailById(data.userId)).data;
-        console.log('\nresponse')
-        console.log(response);
         Queue.sendData({
             recipientEmail: response.data.email,
             subject: "Flight booked",

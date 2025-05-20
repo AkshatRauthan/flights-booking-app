@@ -5,7 +5,7 @@ const {BUSINESS, ECONOMY, PREMIUM_ECONOMY, FIRST_CLASS} = ENUMS.SEAT_TYPES;
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
     async up(queryInterface, Sequelize) {
-        await queryInterface.createTable("Seats", {
+        await queryInterface.createTable("seats", {
             id: {
                 allowNull: false,
                 autoIncrement: true,
@@ -44,6 +44,6 @@ module.exports = {
         });
     },
     async down(queryInterface, Sequelize) {
-        await queryInterface.dropTable("Seats");
+        await queryInterface.dropTable("seats");
     },
 };
