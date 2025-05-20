@@ -25,14 +25,6 @@ module.exports = {
                 values: [BUSINESS, ECONOMY, PREMIUM_ECONOMY, FIRST_CLASS],
                 defaultValue: ECONOMY,
             },
-            airplaneId: {
-                type: Sequelize.INTEGER,
-                allowNull: false,
-                references: {
-                    model: 'Airplanes',
-                    key: 'id'
-                }
-            },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE,
