@@ -27,7 +27,6 @@ module.exports = {
             },
             booking_id: {
                 type: Sequelize.INTEGER,
-                allowNull: false,
                 references: {
                     model: "bookings",
                     key: "id",

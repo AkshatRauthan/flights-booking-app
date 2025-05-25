@@ -4,12 +4,19 @@ const { BookingService } = require('../services');
 const inMemDb = {};
 
 async function createBooking(req, res) {
+    console.log("\n");
+    console.log(req.body);
+    req.body.selectedSeats = JSON.parse(req.body.selectedSeats);
+    console.log(req.body.selectedSeats);
+    console.log(typeof req.body.selectedSeats);
+    console.log(typeof req.body.selectedSeats[0]);
     try {
         const response = await BookingService.createBooking({
             flightId: req.body.flightId,
             userId: req.body.userId,
             noOfSeats: req.body.noOfSeats,
-        })
+            selectedSeats: req.body.selectedSeats
+        });
         SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)

@@ -38,7 +38,6 @@ module.exports = (sequelize, DataTypes) => {
             },
             booking_id: {
                 type: DataTypes.INTEGER,
-                allowNull: false,
             },
             flight_id: {
                 type: DataTypes.INTEGER,
