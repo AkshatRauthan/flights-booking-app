@@ -1,0 +1,5 @@
+.env
+.vscode/
+node_modules/
+combines.log
+src/config/config.json
