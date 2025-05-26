@@ -1,10 +1,9 @@
 const express = require("express");
+
 const router = express.Router();
 
-const BookingRoutes = require('./booking-router');
-const SeatBookingRoutes = require('./seat-booking-router');
+const FlightRoutes = require('./flight-routes');
 
-router.use('/bookings', BookingRoutes);
-router.use('/seats/bookings', SeatBookingRoutes);
+router.use('/flights', FlightRoutes);
 
 module.exports = router;

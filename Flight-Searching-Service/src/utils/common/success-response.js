@@ -1,6 +1,6 @@
 const error = {
     success: true,
-    message:'Request Successful',
+    message:'Request Suceessful',
     data: {},
     error:{}
 };

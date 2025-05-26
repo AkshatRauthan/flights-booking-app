@@ -46,53 +46,6 @@ async function createFlight(req, res){
 }
 
 /*
-GET : /flights
-    req-query : {
-        trips: MUM-DEL,
-        price: 1000-5000,
-        travellers: 2,
-        tripDate: 2022-12-12,
-        sort: price_desc
-    }
-*/
-async function getAllFlights(req, res){
-    try {
-        const response = await FlightServices.getAllFlights(req.query);
-        SuccessResponse.message = "Successfully fetched all flights";
-        SuccessResponse.data = response;
-        return res
-                .status(StatusCodes.OK)
-                .json(SuccessResponse);
-    } catch (error) {
-        ErrorResponse.error = error;
-        return res
-                .status(error.statusCode)
-                .json(ErrorResponse);
-    }
-}
-
-/*
-POST : /flights/:id
-    req-body : {
-    }
-*/
-async function getFlight(req, res) {
-    try{
-        const response = await FlightServices.getFlight(req.params.id);
-        SuccessResponse.message = "Successfully fetched the flight data";
-        SuccessResponse.data = response;
-        return res
-                .status(StatusCodes.OK)
-                .json(SuccessResponse);
-    } catch(error){
-        ErrorResponse.error = error;
-        return res
-                .status(error.statusCode)
-                .json(ErrorResponse);
-    }
-}
-
-/*
 PATCH : /flights/seats/:flightid
     req-body : {
         seats : 10, [number of seats to add or remove]
@@ -122,7 +75,5 @@ async function updateSeats(req, res) {
 
 module.exports = {
     createFlight,
-    getAllFlights,
-    getFlight,
     updateSeats,
 }

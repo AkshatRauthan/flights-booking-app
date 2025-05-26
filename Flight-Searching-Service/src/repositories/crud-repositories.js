@@ -12,11 +12,6 @@ class CrudRepository {
         return response;
     }
 
-    async bulkCreate(data){
-        const response = await this.model.bulkCreate(data);
-        return response;
-    }
-
     async destroy(data){
         const response = await this.model.destroy({
             where: {
