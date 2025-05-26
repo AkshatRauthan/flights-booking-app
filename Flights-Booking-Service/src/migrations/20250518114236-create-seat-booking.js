@@ -3,7 +3,7 @@
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.createTable("seat_bookings", {
-            id: {
+            ids: {
                 allowNull: false,
                 autoIncrement: true,
                 primaryKey: true,
