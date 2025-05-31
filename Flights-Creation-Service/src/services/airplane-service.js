@@ -22,6 +22,7 @@ async function createAirplane(data){
     }
 }
 
+
 async function getAirplanes() {
     try {
         const airplanes = await airplaneRepository.getAll();

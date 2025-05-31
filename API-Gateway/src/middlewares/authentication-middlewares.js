@@ -37,6 +37,8 @@ async function validateAuthToken(req, res, next) {
     }
 }
 
+
+
 module.exports = {
     validateAuthRequest,
     validateAuthToken,
