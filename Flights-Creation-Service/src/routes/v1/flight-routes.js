@@ -17,4 +17,16 @@ router.patch('/:id/seats',
         FlightMiddleware.validateUpdateSeatsRequest,
         FlightController.updateSeats
 )
+
+// /api/v1/flights/:id/seats/validate POST
+router.post('/api/v1/flights/:id/seats/validate',
+        FlightController.areValidSeats,
+)
+
+// /api/v1/flights/validate
+router.post('/validate',
+        FlightController.isValidFlight
+)
+
+
 module.exports = router;

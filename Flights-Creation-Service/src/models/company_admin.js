@@ -7,10 +7,6 @@ module.exports = (sequelize, DataTypes) => {
                 foreignKey: "company_id",
                 onDelete:'cascade'
             });
-            this.belongsTo(models.User,{
-                foreignKey: "user_id",
-                onDelete: "cascade"
-            })
         }
     }
     CompanyAdmin.init(

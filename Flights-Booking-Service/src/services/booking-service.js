@@ -16,10 +16,28 @@ const seatBookingRepository = new SeatBookingRepository();
 async function createBooking(data) {
     const transaction = await db.sequelize.transaction();
     try {
-        const flight = await axios.get(`${ServerConfig.FLIGHT_SERVICE}/api/v1/flights/${data.flightId}`);
+
+        let isValidFlight = await axios.post(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/validate`, {
+            id: data.flightId,
+        });
+        if (!isValidFlight.data.data.isValid) {
+            throw new AppError("The requested flight do not exists.", StatusCodes.NOT_FOUND);
+        }
+
+        let isValidUser = await axios.post(`${ServerConfig.API_GATEWAY}/api/v1/user/validate`, {
+            id: data.userId,
+        });
+        if (!isValidUser.data.data.isValid) {
+            throw new AppError("Invalid user.", StatusCodes.NOT_FOUND);
+        }
+
+        // API call for validationg seats
+
+        const flight = await axios.get(`${ServerConfig.FLIGHT_SEARCHING_SERVICE}/api/v1/flights/${data.flightId}`);
         const flightData = flight.data.data;
 
         let seatsData = [];
+
         data.selectedSeats.forEach((seat) => {
             seatsData.push({
                 user_id: data.userId,
@@ -44,7 +62,7 @@ async function createBooking(data) {
         await transaction.commit();
 
         // Doing it outside. Find a way to improve it.
-        await axios.patch(`${ServerConfig.FLIGHT_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
+        await axios.patch(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
             seats: data.noOfSeats,
             dec: true
         });
@@ -52,7 +70,7 @@ async function createBooking(data) {
     } catch (error) {
         await transaction.rollback();
         if (error instanceof AppError)
-             throw error;
+            throw error;
         if (error.name == "SequelizeUniqueConstraintError" && error.errors[0].path == "unique_seat_flight")
             throw new AppError("Some of the selected seats are already booked", StatusCodes.CONFLICT);
         throw new AppError("Something went wrong", StatusCodes.INTERNAL_SERVER_ERROR);
@@ -62,6 +80,10 @@ async function createBooking(data) {
 async function makePayment(data) {
     const transaction = await db.sequelize.transaction();
     try {
+
+        let isValid = await isValidBooking(data.bookingId);
+        if (!isValid) throw new AppError("Invalid booking ID", StatusCodes.NOT_FOUND);
+
         const bookingDetails = await bookingRepository.get(data.bookingId, transaction);
         const currentTime = new Date();
         const bookingTime = new Date(bookingDetails.createdAt);
@@ -111,7 +133,7 @@ async function cancelBooking(data){
             console.log("Booking is already cancelled");
             return true;    
         }
-        await axios.patch(`${ServerConfig.FLIGHT_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
+        await axios.patch(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
             seats: bookingDetails.noOfSeats,
             dec: false
         });
@@ -135,9 +157,19 @@ async function cancelOldBookings() {
     }
 }
 
+async function isValidBooking(id) {
+    const response = await bookingRepository.get(id, false);
+    console.log(response);
+    if (!response || response.length === 0) {
+        return false;
+    }
+    return true;
+}
+
 module.exports = {
     createBooking,
     makePayment,
     cancelOldBookings,
-    cancelBooking
+    cancelBooking,
+    isValidBooking
 }

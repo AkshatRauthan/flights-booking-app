@@ -34,4 +34,8 @@ router.get('/:id/email',
         UserController.getUserEmailById,
 )
 
+router.post('/validate',
+        UserController.isValidUser
+)
+
 module.exports = router;

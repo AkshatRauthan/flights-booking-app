@@ -16,18 +16,10 @@ module.exports = {
             flightId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: {
-                    model: "flights",
-                    key: "id",
-                }
             },
             userId: {
                 type: Sequelize.INTEGER,
                 allowNull: false,
-                references: {
-                    model: "users",
-                    key: "id",
-                }
             },
             status: {
                 type: Sequelize.ENUM,

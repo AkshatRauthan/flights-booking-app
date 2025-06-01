@@ -128,10 +128,31 @@ async function getUserEmailById(req, res){
     }
 }
 
+async function isValidUser(req, res) {
+    try {
+        const id = req.body.id;
+        const isValid = await UserService.isValidUser(id);
+        SuccessResponse.message = isValid ? "Requested Used is valid" : "Requested Used is not valid";
+        SuccessResponse.data = { 
+            isValid: isValid,
+        }
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error){
+        console.log(error);
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
 module.exports = {
     createUser,
     authenticateUser,
     testAuthentication,
     addRoleToUser,
     getUserEmailById,
+    isValidUser,
 };

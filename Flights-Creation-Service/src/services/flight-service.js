@@ -1,4 +1,4 @@
-const { FlightRepository } = require('../repositories');
+const { FlightRepository, Seat } = require('../repositories');
 
 const { StatusCodes } = require('http-status-codes');
 
@@ -38,7 +38,26 @@ async function updateSeats(data){
     }
 }
 
+async function isValidFlight(id) {
+    const response = await flightRepository.get(id, false);
+    if (!response || response.length === 0) {
+        return false;
+    }
+    return true;
+}
+
+async function areValidSeats(flightId, seats){
+    // const response = await flightRepository.get(id, false);
+    // console.log(response);
+    return true;
+    if (!response || response.length === 0) {
+        return false;
+    }
+    return true;
+}
+
 module.exports = {
     createFlight,
     updateSeats,
+    isValidFlight,
 };

@@ -7,14 +7,14 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
     class Booking extends Model {
         static associate(models) {
-            this.belongsTo(models.Flight, {
-                foreignKey: 'flightId',
-                onDelete: 'cascade',
-            });
-            this.belongsTo(models.User, {
-                foreignKey: 'userId',
-                onDelete: 'cascade',
-            });
+            // this.belongsTo(models.Flight, {
+            //     foreignKey: 'flightId',
+            //     onDelete: 'cascade',
+            // });
+            // this.belongsTo(models.User, {
+            //     foreignKey: 'userId',
+            //     onDelete: 'cascade',
+            // });
         }
     }
     Booking.init(

@@ -62,7 +62,44 @@ async function makePayment(req, res) {
     }
 }
 
+async function isValidBooking(req, res) {
+    try {
+        const id = req.body.id;
+        const isValid = await BookingService.isValidBooking(id);
+        SuccessResponse.message = isValid ? "Requested booking is valid" : "Requested booking is not valid";
+        SuccessResponse.data = { 
+            isValid: isValid,
+        }
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error){
+        console.log(error);
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
+async function cancelOldBookings(req, res){
+    try {
+        const response = await BookingService.cancelOldBookings();
+        SuccessResponse.data = response;
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
 module.exports = {
     createBooking,
     makePayment,
+    isValidBooking,
+    cancelOldBookings,
 }

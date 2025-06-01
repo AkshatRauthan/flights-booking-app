@@ -141,6 +141,14 @@ async function getUserEmailById(data){
     }
 }
 
+async function isValidUser(id) {
+    const response = await userRepository.get(id, false);
+    if (!response || response.length === 0) {
+        return false;
+    }
+    return true;
+}
+
 module.exports = {
     createUser,
     authenticateUser,
@@ -149,4 +157,5 @@ module.exports = {
     addRoleToUser,
     isAdmin,
     getUserEmailById,
+    isValidUser,
 }

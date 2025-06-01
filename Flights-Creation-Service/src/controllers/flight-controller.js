@@ -3,6 +3,7 @@ const { StatusCodes } = require('http-status-codes');
 const { FlightServices } = require('../services');
 
 const { ErrorResponse, SuccessResponse } = require('../utils/common');
+const AppError = require('../utils/errors/app-error');
 
 /*
 POST : /flights
@@ -73,7 +74,54 @@ async function updateSeats(req, res) {
     }
 }
 
+
+async function isValidFlight(req, res) {
+    try {
+        const id = req.body.id;
+        const isValid = await FlightServices.isValidFlight(id);
+        SuccessResponse.message = isValid ? "Requested Flight is valid" : "Requested Flight is not valid";
+        SuccessResponse.data = { 
+            isValid: isValid,
+        }
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error){
+        console.log(error);
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
+async function areValidSeats(req, res) {
+    try {
+        const flightId = req.body.flightId;
+        const seats = req.body.seats;
+        const isValid = await FlightServices.areValidSeats(flightId, seats);
+
+        // Think how we are going to implement it........................
+
+        SuccessResponse.message = isValid ? "Requested Seats are valid" : "Requested Seats are not valid";
+        SuccessResponse.data = { 
+            isValid: isValid,
+        }
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error){
+        console.log(error);
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
 module.exports = {
     createFlight,
     updateSeats,
+    isValidFlight,
+    areValidSeats,
 }

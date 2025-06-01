@@ -13,4 +13,9 @@ router.post(
     BookingController.makePayment
 )
 
+router.post(
+    '/cancel',
+    BookingController.cancelOldBookings
+)
+
 module.exports = router;

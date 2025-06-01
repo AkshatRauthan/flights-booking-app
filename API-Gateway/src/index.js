@@ -5,7 +5,7 @@ const { ServerConfig, Logger } = require("./config")
 const apiRoutes = require("./routes");
 
 const { createProxyMiddleware } = require('http-proxy-middleware');
-const { FLIGHTS_SERVICE, BOOKING_SERVICE } = require("./config/server-config");
+const {FLIGHT_BOOKING_SERVICE, FLIGHT_CREATION_SERVICE, FLIGHT_SEARCHING_SERVICE } = require("./config/server-config");
 
 const app = express();
 
@@ -14,13 +14,18 @@ const limiter = rateLimit({ // Limit Max Requests From an IP to 50 requests per 
     max: 50,
 })
 
-app.use('/flightsService', createProxyMiddleware({
-    target: FLIGHTS_SERVICE, // target host with the same base path
+app.use('/flightsCreationService', createProxyMiddleware({
+    target: FLIGHT_CREATION_SERVICE, // target host with the same base path
     changeOrigin: true, // needed for virtual hosted sites
 }));
 
-app.use('/bookingsService', createProxyMiddleware({
-    target: BOOKING_SERVICE, // target host with the same base path
+app.use('/flightsSearchingService', createProxyMiddleware({
+    target: FLIGHT_SEARCHING_SERVICE, // target host with the same base path
+    changeOrigin: true, // needed for virtual hosted sites
+}));
+
+app.use('/flightsBookingsService', createProxyMiddleware({
+    target: FLIGHT_BOOKING_SERVICE, // target host with the same base path
     changeOrigin: true, // needed for virtual hosted sites
 }));
 
