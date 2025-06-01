@@ -2,7 +2,8 @@ const { FlightRepository, Seat } = require('../repositories');
 
 const { StatusCodes } = require('http-status-codes');
 
-const { DateTimeHelpers } = require('../utils/common');
+const { DateTimeHelpers, QueryParsers } = require('../utils/common');
+const { parseFilterQuery, parseOrderQuery } = QueryParsers;
 
 const AppError = require('../utils/errors/app-error');
 
@@ -56,8 +57,52 @@ async function areValidSeats(flightId, seats){
     return true;
 }
 
+async function getFlight(id){
+    try {
+        let flight = await flightRepository.getFlight(id);
+        if (!flight || flight.length === 0) {
+            throw new AppError('Requested flight not found', StatusCodes.NOT_FOUND);
+        }
+        flight = flight.dataValues;
+        flight.Airplane = flight.Airplane.dataValues;
+        flight.arrivalAirport = flight.arrivalAirport.dataValues;
+        flight.departureAirport = flight.departureAirport.dataValues;
+        flight.arrivalAirport.City = flight.arrivalAirport.City.dataValues;
+        flight.departureAirport.City = flight.departureAirport.City.dataValues;
+        return flight;
+    } catch (error) {
+        console.log(error);
+        if (error instanceof AppError) {
+            throw error;
+        }
+        throw new AppError('Cannot get the requested flight details', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
+async function getAllFlights(query) {
+    let customFilter = parseFilterQuery(query);
+    let sortFilter = parseOrderQuery(query);
+    console.log(query);
+    try {
+        console.log("Custom Filter: ");
+        console.log(customFilter);
+        console.log("Sort Filter: ");
+        console.log(sortFilter);
+        const flights = await flightRepository.getAllFlights(customFilter, sortFilter);
+        return flights;
+    } catch (error) {
+        console.log(error);
+        throw new AppError('Cannot fetch the flights data regarding the search query', StatusCodes.INTERNAL_SERVER_ERROR);
+    }
+}
+
+
+
 module.exports = {
     createFlight,
     updateSeats,
     isValidFlight,
+    getFlight,
+    areValidSeats,
+    getAllFlights,
 };

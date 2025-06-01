@@ -3,6 +3,8 @@ const { Airplane, Airport, City, Flight } = require('../models')
 const { Sequelize, Op } = require('sequelize');
 const db = require("../models");
 const { addingRowLockOnFlights } = require("./queries");
+const AppError = require('../utils/errors/app-error');
+const { StatusCodes } = require('http-status-codes');
 
 class FlightRepository extends CrudRepsitory {
     constructor(){
@@ -42,6 +44,42 @@ class FlightRepository extends CrudRepsitory {
         });
         return response;
     }
+
+    async getFlight(id){
+        const response = await Flight.findByPk(id, {
+            include : [
+                {
+                    model: Airplane,
+                    required: true
+                },
+                {
+                    model: Airport,
+                    as: 'arrivalAirport',
+                    on: {
+                        '$Flight.arrivalAirportId$': { [Op.eq]: Sequelize.col('arrivalAirport.code') },
+                    },
+                    include: {
+                        model: City,
+                    }
+                },
+                {
+                    model: Airport,
+                    as: 'departureAirport',
+                    on: {
+                        '$Flight.departureAirportId$': { [Op.eq]: Sequelize.col('departureAirport.code') },
+                    },
+                    include: {
+                        model: City,
+                    }
+                }
+            ]
+        });
+        if(!response || response.length === 0){
+            throw new AppError("The requested flight is not found", StatusCodes.NOT_FOUND);
+        }
+        return response;
+    }
+
     
     async updateRemainingSeat(flightId, seats, dec) {
         const transaction = await db.sequelize.transaction();

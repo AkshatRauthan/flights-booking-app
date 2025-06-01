@@ -1,63 +1,34 @@
-const { FlightRepository } = require('../repositories');
-
 const { StatusCodes } = require('http-status-codes');
+const { Op } = require('sequelize');
+const axios = require('axios');
 
-const { DateTimeHelpers } = require('../utils/common');
+const { FLIGHT_CREATION_SERVICE } = require("./../config/server-config");
 
 const AppError = require('../utils/errors/app-error');
 
-const { Op } = require('sequelize');
-
-const flightRepository = new FlightRepository();
-
 async function getAllFlights(query) {
-    let customFilter = {};
-    let sortFilter = {};
-    const dayLastMinute = " 23:59:59";
-    // trips=MUM-DEL
-    if (query.trips){
-        [departureAirportId, arrivalAirportId] = query.trips.split("-");
-        customFilter.departureAirportId = departureAirportId;
-        customFilter.arrivalAirportId = arrivalAirportId;
-    }
-    if (query.price){
-        [minPrice, maxPrice] = query.price.split("-");
-        customFilter.price = {
-            [Op.between]: [minPrice, maxPrice]
-        }
-    }
-    if (query.travellers){
-        customFilter.totalSeats = {
-            [Op.gte]: query.travellers
-        }
-    }
-    if (query.tripDate){
-        customFilter.departureTime = {
-            [Op.between]: [query.tripDate, query.tripDate + dayLastMinute]
-        }
-    }
-    if (query.sort){
-        sortFilter = query.sort.split(",").map((field) => {
-            return field.split("_");
-        });
-    }
     try {
-        const flights = await flightRepository.getAllFlights(customFilter, sortFilter);
-        return flights;
+        console.log(query);
+        const flights = await axios.get(`${FLIGHT_CREATION_SERVICE}/api/v1/flights`, {
+            params: query
+        });
+        return flights.data.data;
     } catch (error) {
+        if (error instanceof AppError) throw error;
         console.log(error);
-        throw new AppError('Cannot fetch the flights data regarding the search query', StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError('Cannot fetch the data of requested flights', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
 async function getFlight(id){
     try {
-        const flight = await flightRepository.get(id);
-        return flight;
+        const flight = await axios.get(`${FLIGHT_CREATION_SERVICE}/api/v1/flights/${id}`,{
+            id: id
+        });
+        return flight.data.data;
     } catch (error) {
-        if (error.statusCode == StatusCodes.NOT_FOUND){
-            throw new AppError('Flight with the requested id do not exists', error.statusCode);
-        } 
+        if (error instanceof AppError) throw error;
+        console.log(error);
         throw new AppError('Cannot fetch the data of requested flight', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }

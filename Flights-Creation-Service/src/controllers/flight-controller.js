@@ -119,9 +119,50 @@ async function areValidSeats(req, res) {
     }
 }
 
+async function getFlight(req, res){
+    try {
+        const id = req.params.id;
+        const flight = await FlightServices.getFlight(id);
+        SuccessResponse.message = "Successfully fetched the flight details";
+        SuccessResponse.data = flight;
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error) {
+        console.log(error);
+        ErrorResponse.error = error;
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse)
+    }
+}
+
+async function getAllFlights(req, res){
+    try {
+        console.log(req.query);
+        let response = await FlightServices.getAllFlights(req.query);
+        SuccessResponse.message = "Successfully fetched all flights";
+        SuccessResponse.data = [];
+        response.forEach(obj => {
+            SuccessResponse.data.push(obj.dataValues);
+        });
+        return res
+                .status(StatusCodes.OK)
+                .json(SuccessResponse);
+    } catch (error) {
+        ErrorResponse.error = error;
+        console.log(error);
+        return res
+                .status(error.statusCode)
+                .json(ErrorResponse);
+    }
+}
+
 module.exports = {
     createFlight,
     updateSeats,
     isValidFlight,
     areValidSeats,
+    getFlight,
+    getAllFlights,
 }

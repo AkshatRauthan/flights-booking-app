@@ -17,13 +17,14 @@ GET : /flights
 async function getAllFlights(req, res){
     try {
         const response = await FlightServices.getAllFlights(req.query);
-        SuccessResponse.message = "Successfully fetched all flights";
+        SuccessResponse.message = "Successfully fetched all the flights";
         SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
                 .json(SuccessResponse);
     } catch (error) {
         ErrorResponse.error = error;
+        console.log(error);
         return res
                 .status(error.statusCode)
                 .json(ErrorResponse);
