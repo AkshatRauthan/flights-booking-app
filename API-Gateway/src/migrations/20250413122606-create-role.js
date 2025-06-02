@@ -2,7 +2,7 @@
 /** @type {import('sequelize-cli').Migration} */
 
 const { ENUMS } = require("../utils/common");
-const { ADMIN, CUSTOMER, FLIGHT_COMPANY } = ENUMS.USER_ROLES_ENUMS;
+const { SYSTEM_ADMIN, CUSTOMER, AIRLINE_ADMIN } = ENUMS.USER_ROLES_ENUMS;
 module.exports = {
     async up(queryInterface, Sequelize) {
         await queryInterface.createTable("roles", {
@@ -14,7 +14,7 @@ module.exports = {
             },
             name: {
                 type: Sequelize.ENUM,
-                values: [ADMIN, CUSTOMER, FLIGHT_COMPANY],
+                values: [SYSTEM_ADMIN, CUSTOMER, AIRLINE_ADMIN],
                 allowNull: false,
             },
             createdAt: {

@@ -13,6 +13,7 @@ const roleRepository = new RoleRepository();
 async function createUser(data) {
     try {
         const user = await userRepository.create(data);
+        console.log(data);
         const role =  await roleRepository.getRoleByName(CUSTOMER);
         user.addRole(role);
         return user;

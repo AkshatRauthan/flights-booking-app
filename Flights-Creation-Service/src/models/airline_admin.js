@@ -1,31 +1,31 @@
 "use strict";
 const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-    class CompanyAdmin extends Model {
+    class AirlineAdmin extends Model {
         static associate(models) {
-            this.belongsTo(models.FlightCompany, {
-                foreignKey: "company_id",
+            this.belongsTo(models.airline, {
+                foreignKey: "airline_id",
                 onDelete:'cascade'
             });
         }
     }
-    CompanyAdmin.init(
+    AirlineAdmin.init(
         {
             user_id: {
                 type: DataTypes.INTEGER,
                 allowNull: false,
                 unique: true,
             },
-            company_id:{
+            airline_id:{
                 type: DataTypes.INTEGER,
                 allowNull: false,
             },
         },
         {
             sequelize,
-            modelName: "CompanyAdmin",
-            tableName: "company_admins"
+            modelName: "AirlineAdmin",
+            tableName: "airline_admins"
         }
     );
-    return CompanyAdmin;
+    return AirlineAdmin;
 };

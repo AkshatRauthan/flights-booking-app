@@ -1,5 +1,5 @@
 const { ENUMS } = require("../utils/common");
-const { ADMIN, CUSTOMER, FLIGHT_COMPANY } = ENUMS.USER_ROLES_ENUMS;
+const { SYSTEM_ADMIN, CUSTOMER, AIRLINE_ADMIN } = ENUMS.USER_ROLES_ENUMS;
 
 "use strict";
 const { Model } = require("sequelize");
@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
         {
             name: {
                 type: DataTypes.ENUM({
-                    values: [ADMIN, CUSTOMER, FLIGHT_COMPANY],
+                    values: [SYSTEM_ADMIN, CUSTOMER, AIRLINE_ADMIN],
                 }),
                 allowNull: false,
                 defaultValue: CUSTOMER,
