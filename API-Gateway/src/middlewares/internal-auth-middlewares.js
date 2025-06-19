@@ -29,12 +29,6 @@ async function verifyInternalAuthToken(req, res, next){
             throw new AppError("Service token does not have required permissions", StatusCodes.UNAUTHORIZED);
         }
 
-        console.log("For Expiry");
-        console.log("Now : ", Date.now() );
-        console.log("Token : ", decryptedToken.iat );
-        console.log("Diffrence : ", Date.now() - decryptedToken.iat)
-        console.log("Val : ", Number(SERVICE_TOKEN_EXPIRY_IN_SECONDS) * 1000);
-
         if (!decryptedToken.exp || Date.now() - decryptedToken.iat > Number(SERVICE_TOKEN_EXPIRY_IN_SECONDS) * 1000) {
             console.error("Service token has expired");
             throw new AppError("Service token has expired", StatusCodes.UNAUTHORIZED);

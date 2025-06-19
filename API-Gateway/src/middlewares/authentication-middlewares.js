@@ -14,11 +14,7 @@ async function validateAuthRequest(req, res, next) {
         if (!req.body.password) {
             explanation.push('Password is not present in the request body');
         }
-        ErrorResponse.message = 'Something went wrong while processing the request';
-        ErrorResponse.error = new AppError(explanation, StatusCodes.BAD_REQUEST);
-        return res
-                .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse);
+        throw new AppError(explanation.join(' .'), StatusCodes.BAD_REQUEST);
     }
     console.log("Hello");
     next();
@@ -34,10 +30,7 @@ async function validateAuthToken(req, res, next) {
         }
     } catch (error) {
         console.log(error);
-        ErrorResponse.error = error;
-        return res
-                .status(error.statusCode)
-                .json(ErrorResponse);
+        throw new AppError("Something went wrong while validating the authentication token", StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
