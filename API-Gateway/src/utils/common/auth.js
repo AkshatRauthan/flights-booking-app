@@ -1,9 +1,18 @@
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken');    
 
-const { JWT_SECRET, JWT_EXPIRY } = require('../../config/server-config');
+const { JWT_SECRET, JWT_EXPIRY, SALT_ROUNDS } = require('../../config/server-config');
 const AppError = require('../errors/app-error');
 const { StatusCodes } = require('http-status-codes');
+
+async function hashPassword(password) {
+    try {
+        const salt = bcrypt.genSaltSync(Number(SALT_ROUNDS));
+        return bcrypt.hashSync(password, salt);
+    } catch (error) {
+        throw error;
+    }
+}
 
 async function checkPassword(password, encryptedPassword) {
     try {
@@ -36,4 +45,5 @@ module.exports = {
     checkPassword,
     createAuthToken,
     verifyToken,
+    hashPassword,
 }

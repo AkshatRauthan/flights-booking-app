@@ -9,6 +9,7 @@
   "author": "Akshat",
   "license": "ISC",
   "dependencies": {
+    "amqplib": "^0.10.8",
     "bcrypt": "^5.1.1",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -20,6 +21,7 @@
     "nodemon": "^3.1.9",
     "sequelize": "^6.37.5",
     "sequelize-cli": "^6.6.2",
+    "uuid": "^11.1.0",
     "winston": "^3.17.0"
   }
 }

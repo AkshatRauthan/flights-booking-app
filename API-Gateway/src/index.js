@@ -1,7 +1,7 @@
 const express = require("express");
 const rateLimit = require('express-rate-limit'); 
 
-const { ServerConfig, Logger } = require("./config")
+const { ServerConfig, Logger, QueueConfig } = require("./config")
 const apiRoutes = require("./routes");
 
 const { createProxyMiddleware } = require('http-proxy-middleware');
@@ -36,7 +36,7 @@ app.use(limiter);
 
 app.use('/api', apiRoutes);
 
-app.listen(ServerConfig.PORT, () => {
+app.listen(ServerConfig.PORT, async () => {
     console.log(`\nSuccessfully started the server on port ${ServerConfig.PORT}`);
 });
 

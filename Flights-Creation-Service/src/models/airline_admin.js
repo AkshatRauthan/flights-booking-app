@@ -3,7 +3,7 @@ const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
     class AirlineAdmin extends Model {
         static associate(models) {
-            this.belongsTo(models.airline, {
+            this.belongsTo(models.Airline, {
                 foreignKey: "airline_id",
                 onDelete:'cascade'
             });

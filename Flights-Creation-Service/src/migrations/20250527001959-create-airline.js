@@ -1,48 +1,70 @@
 "use strict";
-/** @type {import('sequelize-cli').Migration} */
+
+const { ENUMS } = require("../utils/common");
+const { ACTIVE, INACTIVE } = ENUMS.AIRLINE_STATUS;
+
 module.exports = {
-    async up(queryInterface, Sequelize) {
+    up: async (queryInterface, Sequelize) => {
         await queryInterface.createTable("airlines", {
             id: {
-                allowNull: false,
+                type: Sequelize.INTEGER,
                 autoIncrement: true,
                 primaryKey: true,
-                type: Sequelize.INTEGER,
+                allowNull: false,
             },
             name: {
-                type: Sequelize.STRING,
+                type: Sequelize.STRING(255),
                 allowNull: false,
                 unique: true,
             },
             email: {
-                type: Sequelize.STRING,
+                type: Sequelize.STRING(255),
                 allowNull: false,
                 unique: true,
-                validate: {
-                    isEmail: true,
-                }
             },
-            code: {
-                type: Sequelize.STRING,
+            iataCode: {
+                type: Sequelize.CHAR(2),
                 allowNull: false,
                 unique: true,
-                validate: {
-                    isAlphanumeric: true
-                }
+            },
+            icaoCode: {
+                type: Sequelize.CHAR(3),
+                allowNull: false,
+                unique: true,
+            },
+            country: {
+                type: Sequelize.CHAR(50),
+                allowNull: false,
+                defaultValue: "India",
+            },
+            contactNo: {
+                type: Sequelize.STRING(12),
+                allowNull: false,
+                unique: true,
+            },
+            status: {
+                type: Sequelize.ENUM,
+                values: [ACTIVE, INACTIVE],
+                allowNull: false,
+            },
+            logoIcon: {
+                type: Sequelize.STRING(255),
+                allowNull: true,
             },
             createdAt: {
                 allowNull: false,
                 type: Sequelize.DATE,
-                allowNull: false,
+                defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
             },
             updatedAt: {
                 allowNull: false,
                 type: Sequelize.DATE,
-                allowNull: false,
+                defaultValue: Sequelize.literal("CURRENT_TIMESTAMP"),
             },
         });
     },
-    async down(queryInterface, Sequelize) {
+
+    down: async (queryInterface, Sequelize) => {
         await queryInterface.dropTable("airlines");
     },
 };

@@ -9,7 +9,7 @@
   "author": "Akshat",
   "license": "ISC",
   "dependencies": {
-    "amqplib": "^0.10.7",
+    "amqplib": "^0.10.8",
     "axios": "^1.7.9",
     "bcrypt": "^6.0.0",
     "dotenv": "^16.4.7",

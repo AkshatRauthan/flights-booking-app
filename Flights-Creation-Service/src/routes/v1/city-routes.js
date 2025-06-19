@@ -17,7 +17,7 @@ router.get('/',
         CityController.getCities
 );
 
-// api/v1/city/:id POST
+// api/v1/city/:id GET
 router.get('/:id',
         CityController.getCity
 );

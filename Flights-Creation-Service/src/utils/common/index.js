@@ -4,4 +4,5 @@ module.exports = {
     SuccessResponse: require('./success-response'),
     DateTimeHelpers: require('./helpers/datetime-helpers'),
     QueryParsers: require('./helpers/parse-query'),
+    ServiceAuthFunctions: require('./service-auth'),
 }

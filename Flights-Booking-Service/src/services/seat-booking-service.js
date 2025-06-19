@@ -11,7 +11,7 @@ const seatBookingRepository = new SeatBookingRepository();
 async function createSeatBooking(data) {
     const transaction = await db.sequelize.transaction();
     try {
-        
+        // Create seatsData object
         const response = await seatBookingRepository.createSeatBooking(seatsData, transaction);
         await transaction.commit();
         return response;

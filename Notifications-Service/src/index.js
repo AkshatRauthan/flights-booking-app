@@ -5,7 +5,6 @@ const { ServerConfig, Logger } = require("./config")
 const { EmailService } = require("./services")
 const apiRoutes = require("./routes");
 
-const mailsender = require("./config/email-config");
 const { GMAIL_EMAIL, RABBITMQ_USERNAME, RABBITMQ_PASSWORD } = ServerConfig;
 
 const app = express();
@@ -38,4 +37,4 @@ app.listen(ServerConfig.PORT, async () => {
     console.log(`\nSuccessfully started the server on port ${ServerConfig.PORT}`);
     await connectQueue();
     console.log("Connected To Queue");
-});
+}); 

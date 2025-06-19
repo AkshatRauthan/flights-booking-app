@@ -8,7 +8,7 @@ async function createSeatBooking(req, res) {
             flightId: req.body.flightId,
             userId: req.body.userId,
             selectedSeats: req.body.selectedSeats
-        });
+        })
         SuccessResponse.data = response;
         SuccessResponse.message = "All the selected seats are available.";
         return res

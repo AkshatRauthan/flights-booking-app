@@ -3,4 +3,6 @@ module.exports = {
     AirportServices: require('./airport-service'),
     CityServices: require('./city-service'),
     FlightServices: require('./flight-service'),
+    AirlineServices: require('./airline-service'),
+    AirlineAdminServices: require('./airline-admin-service')
 }

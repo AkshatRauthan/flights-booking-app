@@ -7,4 +7,4 @@ const SeatBookingRoutes = require('./seat-booking-router');
 router.use('/bookings', BookingRoutes);
 router.use('/seats/bookings', SeatBookingRoutes);
 
-module.exports = router;
+module.exports = router;s
