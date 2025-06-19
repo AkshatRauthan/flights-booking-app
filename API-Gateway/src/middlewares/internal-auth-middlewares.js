@@ -1,5 +1,4 @@
 const { StatusCodes } = require('http-status-codes');
-const { ErrorResponse } = require('../utils/common');
 const AppError = require('../utils/errors/app-error');
 const { SERVICE_TOKEN_EXPIRY_IN_SECONDS } = require("../config/server-config");
 
