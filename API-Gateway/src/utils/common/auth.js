@@ -29,7 +29,7 @@ async function createAuthToken(object) {
         throw error;
     }
 }
-
+// Testing commit after setting up SSH protocol
 async function verifyToken(token) {
     try {
         const response = jwt.verify(token, JWT_SECRET);
