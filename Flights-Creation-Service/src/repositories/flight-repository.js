@@ -12,10 +12,16 @@ class FlightRepository extends CrudRepsitory {
         super(Flight)
     }
 
-    async getAllFlights(filter, sort){
-        const response = await Flight.findAll({
+    async getAllFlights(filter, sort, pagination = {}){
+        const page = pagination.page || 1;
+        const limit = pagination.limit || 10;
+        const offset = (page - 1) * limit;
+
+        const { count, rows } = await Flight.findAndCountAll({
             where: filter,
             order: sort,
+            limit,
+            offset,
             include : [
                 {
                     model: Airplane,
@@ -43,7 +49,15 @@ class FlightRepository extends CrudRepsitory {
                 }
             ]
         });
-        return response;
+        return {
+            flights: rows,
+            pagination: {
+                page,
+                limit,
+                totalItems: count,
+                totalPages: Math.ceil(count / limit),
+            },
+        };
     }
 
     async getFlight(id){
@@ -88,9 +102,9 @@ class FlightRepository extends CrudRepsitory {
             await db.sequelize.query(addingRowLockOnFlights(flightId));
             const flight = await Flight.findByPk(flightId);
             if(dec == true){
-                await flight.decrement('totalSeats', {by: seats}, {transaction: transaction});
+                await flight.decrement('totalSeats', {by: seats, transaction: transaction});
             } else if (dec == false){
-                await flight.increment('totalSeats', {by: seats}, {transaction: transaction});
+                await flight.increment('totalSeats', {by: seats, transaction: transaction});
             }
             
             await transaction.commit();

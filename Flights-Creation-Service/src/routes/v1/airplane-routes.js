@@ -1,14 +1,13 @@
-const { AirplaneController } = require('../../controllers');
-
-const { AirplaneMiddleware } = require('../../middlewares/index');
-
 const express = require('express');
+const { AirplaneController } = require('../../controllers');
+const validate = require('../../middlewares/validate');
+const { createAirplaneSchema } = require('../../middlewares/validators');
 
 const router = express.Router();
 
 // /api/v1/airplanes POST
 router.post('/',
-        AirplaneMiddleware.validateCreateObject,
+        validate(createAirplaneSchema),
         AirplaneController.createAirplane
 );
 
@@ -17,7 +16,7 @@ router.get('/',
         AirplaneController.getAirplanes
 );
 
-// api/v1/airplanes/:id POST
+// api/v1/airplanes/:id GET
 router.get('/:id',
         AirplaneController.getAirplane
 );
@@ -25,12 +24,12 @@ router.get('/:id',
 // api/v1/airplanes/:id DELETE
 router.delete('/:id',
         AirplaneController.destroyAirplane
-)
+);
 
 // api/v1/airplanes/:id PATCH
 router.patch('/:id',
-        AirplaneMiddleware.validateUpdateObject,
+        validate(createAirplaneSchema),
         AirplaneController.updateAirplane
-)
+);
 
 module.exports = router;

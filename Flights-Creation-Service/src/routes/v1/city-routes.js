@@ -1,14 +1,13 @@
-const { CityController } = require('../../controllers');
-
-const { CityMiddleware } = require('../../middlewares/index');
-
 const express = require('express');
+const { CityController } = require('../../controllers');
+const validate = require('../../middlewares/validate');
+const { createCitySchema } = require('../../middlewares/validators');
 
 const router = express.Router();
 
 // /api/v1/city POST
 router.post('/',
-        CityMiddleware.validateCreateObject,
+        validate(createCitySchema),
         CityController.createCity
 );
 
@@ -25,12 +24,12 @@ router.get('/:id',
 // api/v1/city/:id DELETE
 router.delete('/:id',
         CityController.destroyCity
-)
+);
 
 // api/v1/city/:id PATCH
 router.patch('/:id',
-        CityMiddleware.validateUpdateObject,
+        validate(createCitySchema),
         CityController.updateCity
-)
+);
 
 module.exports = router;

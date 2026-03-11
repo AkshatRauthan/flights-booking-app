@@ -22,4 +22,6 @@ module.exports = {
     RABBITMQ_PASSWORD: process.env.RABBITMQ_PASSWORD,
     AIRLINE_ADMIN_REQ_QUEUE: process.env.AIRLINE_ADMIN_REQ_QUEUE,
     AIRLINE_ADMIN_RES_QUEUE: process.env.AIRLINE_ADMIN_RES_QUEUE,
+    REDIS_HOST: process.env.REDIS_HOST,
+    REDIS_PORT: process.env.REDIS_PORT,
 }

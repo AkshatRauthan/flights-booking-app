@@ -8,33 +8,63 @@ const AppError = require("../utils/errors/app-error");
 const { BookingRepository, SeatBookingRepository } = require("../repositories");
 const { getEmailById } = require("../utils/common/helpers/fetch-email");
 const { Logger } = require('../config');
+const { createCircuitBreaker } = require('../utils/circuit-breaker');
+const { retryWithBackoff } = require('../utils/retry');
 
 const { BOOKING_STATUS } = ENUMS;
 
 const bookingRepository = new BookingRepository();
 const seatBookingRepository = new SeatBookingRepository();
 
+// Raw HTTP call functions for circuit breaker wrapping
+async function validateFlightCall(flightId) {
+    return axios.post(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/validate`, { id: flightId });
+}
+
+async function validateUserCall(userId) {
+    return axios.post(`${ServerConfig.API_GATEWAY}/api/v1/user/validate`, { id: userId });
+}
+
+async function fetchFlightDataCall(flightId) {
+    return axios.get(`${ServerConfig.FLIGHT_SEARCHING_SERVICE}/api/v1/flights/${flightId}`);
+}
+
+async function updateSeatsCall({ flightId, seats, dec }) {
+    return axios.patch(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/${flightId}/seats`, { seats, dec });
+}
+
+// Circuit breakers
+const validateFlightBreaker = createCircuitBreaker(validateFlightCall, 'validateFlight');
+const validateUserBreaker = createCircuitBreaker(validateUserCall, 'validateUser');
+const fetchFlightDataBreaker = createCircuitBreaker(fetchFlightDataCall, 'fetchFlightData');
+const updateSeatsBreaker = createCircuitBreaker(updateSeatsCall, 'updateSeats');
+
 async function createBooking(data) {
     const transaction = await db.sequelize.transaction();
     try {
 
-        let isValidFlight = await axios.post(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/validate`, {
-            id: data.flightId,
-        });
+        let isValidFlight = await retryWithBackoff(
+            () => validateFlightBreaker.fire(data.flightId),
+            { maxRetries: 3, baseDelay: 1000 }
+        );
         if (!isValidFlight.data.data.isValid) {
             throw new AppError("The requested flight do not exists.", StatusCodes.NOT_FOUND);
         }
 
-        let isValidUser = await axios.post(`${ServerConfig.API_GATEWAY}/api/v1/user/validate`, {
-            id: data.userId,
-        });
+        let isValidUser = await retryWithBackoff(
+            () => validateUserBreaker.fire(data.userId),
+            { maxRetries: 3, baseDelay: 1000 }
+        );
         if (!isValidUser.data.data.isValid) {
             throw new AppError("Invalid user.", StatusCodes.NOT_FOUND);
         }
 
-        // API call for validationg seats
+        // API call for validating seats
 
-        const flight = await axios.get(`${ServerConfig.FLIGHT_SEARCHING_SERVICE}/api/v1/flights/${data.flightId}`);
+        const flight = await retryWithBackoff(
+            () => fetchFlightDataBreaker.fire(data.flightId),
+            { maxRetries: 3, baseDelay: 1000 }
+        );
         const flightData = flight.data.data;
 
         let seatsData = [];
@@ -63,10 +93,10 @@ async function createBooking(data) {
         await transaction.commit();
 
         // Doing it outside. Find a way to improve it.
-        await axios.patch(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
-            seats: data.noOfSeats,
-            dec: true
-        });
+        await retryWithBackoff(
+            () => updateSeatsBreaker.fire({ flightId: data.flightId, seats: data.noOfSeats, dec: true }),
+            { maxRetries: 3, baseDelay: 1000 }
+        );
         return booking;
     } catch (error) {
         await transaction.rollback();
@@ -134,10 +164,10 @@ async function cancelBooking(data){
             Logger.warn("Booking is already cancelled");
             return true;    
         }
-        await axios.patch(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
-            seats: bookingDetails.noOfSeats,
-            dec: false
-        });
+        await retryWithBackoff(
+            () => updateSeatsBreaker.fire({ flightId: data.flightId, seats: bookingDetails.noOfSeats, dec: false }),
+            { maxRetries: 3, baseDelay: 1000 }
+        );
         bookingDetails.status = BOOKING_STATUS.CANCELLED;
         await bookingDetails.save({ transaction });
         await transaction.commit();
@@ -167,10 +197,36 @@ async function isValidBooking(id) {
     return true;
 }
 
+async function getUserBookings(userId) {
+    const bookings = await bookingRepository.getBookingsByUserId(userId);
+    return bookings;
+}
+
+async function cancelUserBooking(bookingId, userId) {
+    const booking = await bookingRepository.get(bookingId);
+    if (!booking) {
+        throw new AppError('Booking not found', StatusCodes.NOT_FOUND);
+    }
+    if (booking.userId !== parseInt(userId)) {
+        throw new AppError('You can only cancel your own bookings', StatusCodes.FORBIDDEN);
+    }
+    if (booking.status === BOOKING_STATUS.CANCELLED) {
+        throw new AppError('Booking is already cancelled', StatusCodes.BAD_REQUEST);
+    }
+    if (booking.status === BOOKING_STATUS.BOOKED) {
+        throw new AppError('Cannot cancel a confirmed booking. Please contact support.', StatusCodes.BAD_REQUEST);
+    }
+    // Only allow cancellation for 'initiated' or 'pending' bookings
+    const updatedBooking = await bookingRepository.update(bookingId, { status: BOOKING_STATUS.CANCELLED });
+    return updatedBooking;
+}
+
 module.exports = {
     createBooking,
     makePayment,
     cancelOldBookings,
     cancelBooking,
+    cancelUserBooking,
+    getUserBookings,
     isValidBooking
 }

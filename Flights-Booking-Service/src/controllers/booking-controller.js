@@ -1,16 +1,11 @@
 const { StatusCodes } = require('http-status-codes');
 const { createSuccessResponse, createErrorResponse } = require('../utils/common');
 const { BookingService } = require('../services');
-const { Logger } = require('../config');
-const inMemDb = {};
+const { Logger, RedisConfig } = require('../config');
 
 async function createBooking(req, res) {
     Logger.info(`Create booking request received`);
-    Logger.info(`Request body: ${JSON.stringify(req.body)}`);
     req.body.selectedSeats = JSON.parse(req.body.selectedSeats);
-    Logger.info(`Selected seats: ${JSON.stringify(req.body.selectedSeats)}`);
-    Logger.info(`Selected seats type: ${typeof req.body.selectedSeats}`);
-    Logger.info(`First seat type: ${typeof req.body.selectedSeats[0]}`);
     try {
         const response = await BookingService.createBooking({
             flightId: req.body.flightId,
@@ -32,13 +27,15 @@ async function makePayment(req, res) {
     try {
         Logger.info("Processing payment request");
         const idempotencyKey = req.headers['x-idempotency-key'];
-        Logger.info(`Idempotency Key: ${idempotencyKey}`);
         if (!idempotencyKey){
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({message: 'The Idempotency Key is missing from request.'});
         }
-        if (inMemDb[idempotencyKey]){
+        const redis = RedisConfig.getRedisClient();
+        const redisKey = `idempotency:${idempotencyKey}`;
+        const wasSet = await redis.set(redisKey, '1', 'EX', 300, 'NX');
+        if (!wasSet) {
             return res
                 .status(StatusCodes.BAD_REQUEST)
                 .json({message: 'The request is already been processed. Please do not retry'});
@@ -48,7 +45,6 @@ async function makePayment(req, res) {
             userId: req.body.userId,
             totalCost: req.body.totalCost,
         })
-        inMemDb[idempotencyKey] = idempotencyKey;
         return res
                 .status(StatusCodes.OK)
                 .json(createSuccessResponse(response));
@@ -90,9 +86,36 @@ async function cancelOldBookings(req, res){
     }
 }
 
+async function getUserBookings(req, res) {
+    try {
+        const userId = req.params.userId;
+        const bookings = await BookingService.getUserBookings(userId);
+        return res.status(StatusCodes.OK).json(createSuccessResponse(bookings));
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json(
+            createErrorResponse(error, error.message)
+        );
+    }
+}
+
+async function cancelBooking(req, res) {
+    try {
+        const { bookingId } = req.body;
+        const userId = req.headers['x-user-id'];
+        const booking = await BookingService.cancelUserBooking(bookingId, userId);
+        return res.status(StatusCodes.OK).json(createSuccessResponse(booking, 'Booking cancelled successfully'));
+    } catch (error) {
+        return res.status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR).json(
+            createErrorResponse(error, error.message)
+        );
+    }
+}
+
 module.exports = {
     createBooking,
     makePayment,
     isValidBooking,
     cancelOldBookings,
+    getUserBookings,
+    cancelBooking,
 }

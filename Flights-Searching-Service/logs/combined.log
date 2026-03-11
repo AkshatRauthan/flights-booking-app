@@ -1,0 +1,21 @@
+2026-03-11 21:59:29 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 21:59:29 [[33mwarn[39m]: Attempt 1 failed, retrying in 1964ms... {"service":"searching-service"}
+2026-03-11 21:59:31 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 21:59:31 [[33mwarn[39m]: Attempt 2 failed, retrying in 2125ms... {"service":"searching-service"}
+2026-03-11 21:59:33 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 21:59:33 [[33mwarn[39m]: Attempt 1 failed, retrying in 1205ms... {"service":"searching-service"}
+2026-03-11 21:59:34 [[33mwarn[39m]: Attempt 2 failed, retrying in 2504ms... {"service":"searching-service"}
+2026-03-11 22:07:02 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 22:07:02 [[33mwarn[39m]: Attempt 1 failed, retrying in 1267ms... {"service":"searching-service"}
+2026-03-11 22:07:03 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 22:07:03 [[33mwarn[39m]: Attempt 2 failed, retrying in 2156ms... {"service":"searching-service"}
+2026-03-11 22:07:05 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 22:07:05 [[33mwarn[39m]: Attempt 1 failed, retrying in 1512ms... {"service":"searching-service"}
+2026-03-11 22:07:07 [[33mwarn[39m]: Attempt 2 failed, retrying in 2058ms... {"service":"searching-service"}
+2026-03-11 22:12:59 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 22:12:59 [[33mwarn[39m]: Attempt 1 failed, retrying in 1745ms... {"service":"searching-service"}
+2026-03-11 22:13:01 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 22:13:01 [[33mwarn[39m]: Attempt 2 failed, retrying in 2133ms... {"service":"searching-service"}
+2026-03-11 22:13:03 [[33mwarn[39m]: Circuit breaker [getAllFlights] FALLBACK {"service":"searching-service"}
+2026-03-11 22:13:03 [[33mwarn[39m]: Attempt 1 failed, retrying in 1809ms... {"service":"searching-service"}
+2026-03-11 22:13:05 [[33mwarn[39m]: Attempt 2 failed, retrying in 2182ms... {"service":"searching-service"}

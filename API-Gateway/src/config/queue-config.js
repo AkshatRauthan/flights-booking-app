@@ -2,6 +2,7 @@ const amqplib = require("amqplib");
 
 const { RABBITMQ_USERNAME, RABBITMQ_PASSWORD, RABBITMQ_HOST, AIRLINE_ADMIN_RES_QUEUE, AIRLINE_ADMIN_REQ_QUEUE } = require("./server-config")
 const Logger = require('./logger-config');
+const { AuthService } = require('../services');
 let connection, channel;
 
 async function connectQueue(){
@@ -35,18 +36,26 @@ async function sendData(data, queueName){
 
 async function generateUser(data, msg){
     Logger.info("Queue Recieved Successfully");
-    Logger.info(`Queue data: ${JSON.stringify(data)}`);
-    Logger.info("Generating User");
+    try {
+        const user = await AuthService.createUser({
+            email: data.email,
+            password: data.password,
+            role: data.isAirlineAdmin ? 'airline_admin' : 'customer',
+        });
 
-    let res = {data : {
-        ...data,
-        userId: 100,
-    }}
+        const res = {
+            ...data,
+            userId: user.id,
+        };
 
-    Logger.info("Sending Response to Queue");
-    await sendData(data, AIRLINE_ADMIN_RES_QUEUE);
-    Logger.info("Response Sent Successfully");
-    channel.ack(msg);
+        Logger.info("Sending Response to Queue");
+        await sendData(res, AIRLINE_ADMIN_RES_QUEUE);
+        Logger.info("Response Sent Successfully");
+        channel.ack(msg);
+    } catch (error) {
+        Logger.error(`Failed to generate user: ${error}`);
+        channel.nack(msg, false, false);
+    }
 }
 
 module.exports = {

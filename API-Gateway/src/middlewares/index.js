@@ -3,4 +3,5 @@ module.exports = {
     AuthorizationMiddlewares: require('./authorization-middlewares'),
     InternalAuthMiddlewares: require('./internal-auth-middlewares'),
     ValidationMiddlewares: require('./validation-middlewares'),
+    CorrelationIdMiddleware: require('./correlation-id'),
 }

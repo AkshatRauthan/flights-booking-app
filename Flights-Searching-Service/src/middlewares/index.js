@@ -1,3 +1,4 @@
 module.exports = {
-    FlightMiddleware : require('./flight-middlewares')
+    FlightMiddleware : require('./flight-middlewares'),
+    CorrelationIdMiddleware: require('./correlation-id'),
 }

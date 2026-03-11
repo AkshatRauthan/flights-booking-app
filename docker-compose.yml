@@ -22,6 +22,22 @@ services:
     networks:
       - flights-network
 
+  redis:
+    image: redis:7-alpine
+    container_name: flights-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flights-network
+
   rabbitmq:
     image: rabbitmq:3-management-alpine
     container_name: flights-rabbitmq
@@ -65,10 +81,14 @@ services:
       FLIGHT_BOOKING_SERVICE: http://flights-booking-service:3002
       SERVICE_SECRET: ${SERVICE_SECRET:-your-service-secret}
       SERVICE_TOKEN_EXPIRY_IN_SECONDS: ${SERVICE_TOKEN_EXPIRY:-300}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       mysql:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - flights-network
@@ -91,10 +111,14 @@ services:
       FLIGHT_CREATION_SERVICE: http://flights-creation-service:3003
       FLIGHT_SEARCHING_SERVICE: http://flights-searching-service:3004
       API_GATEWAY: http://api-gateway:3001
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
       mysql:
         condition: service_healthy
       rabbitmq:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     networks:
       - flights-network
@@ -134,8 +158,13 @@ services:
     environment:
       PORT: 3004
       FLIGHT_CREATION_SERVICE: http://flights-creation-service:3003
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
     depends_on:
-      - flights-creation-service
+      flights-creation-service:
+        condition: service_started
+      redis:
+        condition: service_healthy
     networks:
       - flights-network
 
@@ -167,6 +196,7 @@ services:
 volumes:
   mysql_data:
   rabbitmq_data:
+  redis_data:
 
 networks:
   flights-network:

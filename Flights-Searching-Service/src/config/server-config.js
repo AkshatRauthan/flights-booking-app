@@ -7,4 +7,6 @@ module.exports = {
     FLIGHT_BOOKING_SERVICE: process.env.FLIGHT_BOOKING_SERVICE,
     FLIGHT_CREATION_SERVICE: process.env.FLIGHT_CREATION_SERVICE,
     API_GATEWAY: process.env.API_GATEWAY,
+    REDIS_HOST: process.env.REDIS_HOST,
+    REDIS_PORT: process.env.REDIS_PORT,
 }

@@ -4,4 +4,5 @@ module.exports = {
     CityMiddleware : require('./city-middlewares'),
     FlightMiddleware : require('./flight-middlewares'),
     AuthMiddleware : require('./auth-middlewares'),
+    CorrelationIdMiddleware: require('./correlation-id'),
 }

@@ -1,0 +1,1056 @@
+{
+	"info": {
+		"_postman_id": "f1a2b3c4-d5e6-7890-abcd-ef1234567890",
+		"name": "Flights Booking App",
+		"description": "Comprehensive API collection for the Flights Booking App microservices.\n\n## Architecture\n- **API Gateway** (port 3001) — Auth, users, and proxy to downstream services\n- **Flights Booking Service** (port 3002) — Bookings and seat reservations\n- **Flights Creation Service** (port 3003) — Flights, airplanes, airports, cities, airlines\n- **Flights Searching Service** (port 3004) — Flight search with caching\n- **Notifications Service** (port 3005) — Email notifications via RabbitMQ\n\n## Proxy Routes (via Gateway)\nThe API Gateway proxies requests to downstream services:\n- `/flightsCreationService/*` → Flights Creation Service\n- `/flightsSearchingService/*` → Flights Searching Service\n- `/flightsBookingsService/*` → Flights Booking Service",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3001",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "flightsCreationUrl",
+			"value": "http://localhost:3003",
+			"type": "string"
+		},
+		{
+			"key": "flightsSearchingUrl",
+			"value": "http://localhost:3004",
+			"type": "string"
+		},
+		{
+			"key": "flightsBookingUrl",
+			"value": "http://localhost:3002",
+			"type": "string"
+		},
+		{
+			"key": "notificationsUrl",
+			"value": "http://localhost:3005",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "Auth",
+			"description": "Authentication endpoints — signup and signin via the API Gateway.",
+			"item": [
+				{
+					"name": "Signup",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "signup"]
+						},
+						"description": "Register a new user account. Returns a JWT token on success.\n\nOptional fields:\n- `isDatabaseAdmin` (boolean) — mark as system admin (internal use)\n- `isAirlineAdmin` (boolean) — mark as airline admin (internal use)"
+					},
+					"response": []
+				},
+				{
+					"name": "Signin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"user@example.com\",\n    \"password\": \"password123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/auth/signin",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "auth", "signin"]
+						},
+						"description": "Authenticate an existing user. Returns a JWT token on success."
+					},
+					"response": []
+				},
+				{
+					"name": "Internal Signup (Service-to-Service)",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "x-service-token",
+								"value": "{{serviceToken}}",
+								"description": "Internal service authentication token"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"airline-admin@example.com\",\n    \"password\": \"securepassword\",\n    \"isAirlineAdmin\": true\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/internal/auth/signup",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "internal", "auth", "signup"]
+						},
+						"description": "Internal endpoint for service-to-service user creation (e.g., creating airline admin accounts from Flights Creation Service). Requires a valid internal service token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"description": "User management endpoints. Most require authentication via JWT.",
+			"item": [
+				{
+					"name": "Delete User",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/1",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "1"]
+						},
+						"description": "Delete a user by ID. Requires authentication and account ownership (only the user themselves can delete their account)."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Email",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"newEmail\": \"newemail@example.com\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/1/email",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "1", "email"]
+						},
+						"description": "Update a user's email address. Requires authentication and account ownership."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Password",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"oldPassword\": \"password123\",\n    \"newPassword\": \"newpassword456\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/1/password",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "1", "password"]
+						},
+						"description": "Update a user's password. Requires authentication and account ownership. Old password must be provided for verification."
+					},
+					"response": []
+				},
+				{
+					"name": "Add Role to User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 2,\n    \"roleName\": \"airline_admin\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/role",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "role"]
+						},
+						"description": "Assign a role to a user. Requires authentication and system_admin role.\n\nValid roles: `system_admin`, `customer`, `airline_admin`"
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Email by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/1/email",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "1", "email"]
+						},
+						"description": "Get a user's email address by their ID. Does not require authentication — used internally by other services."
+					},
+					"response": []
+				},
+				{
+					"name": "Validate User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/v1/user/validate",
+							"host": ["{{baseUrl}}"],
+							"path": ["api", "v1", "user", "validate"]
+						},
+						"description": "Check if a user exists and is valid. Used internally by other services."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Flights",
+			"description": "Flight management endpoints on the Flights Creation Service (port 3003). Can also be accessed via the gateway proxy at `/flightsCreationService/api/v1/flights`.",
+			"item": [
+				{
+					"name": "Create Flight",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"flightNumber\": \"AI-101\",\n    \"airplaneId\": 1,\n    \"departureAirportId\": \"BOM\",\n    \"arrivalAirportId\": \"DEL\",\n    \"arrivalTime\": \"2026-04-15T14:30:00\",\n    \"departureTime\": \"2026-04-15T12:00:00\",\n    \"price\": 4500,\n    \"boardingGate\": \"A12\"\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/flights",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "flights"]
+						},
+						"description": "Create a new flight. The `totalSeats` field is automatically populated from the airplane's capacity."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Flights",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/flights?trips=BOM-DEL",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "flights"],
+							"query": [
+								{
+									"key": "trips",
+									"value": "BOM-DEL",
+									"description": "Filter by route (departure-arrival airport codes)"
+								}
+							]
+						},
+						"description": "Get all flights. Optionally filter by route using the `trips` query parameter (e.g., `BOM-DEL`)."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Flight by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/flights/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "flights", "1"]
+						},
+						"description": "Get a specific flight by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Flight Seats",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"seats\": 2,\n    \"dec\": true\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/flights/1/seats",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "flights", "1", "seats"]
+						},
+						"description": "Increment or decrement available seats on a flight.\n\n- `seats` — number of seats to add/remove\n- `dec` — if `true`, decrement; if `false`, increment"
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Seats",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"seatIds\": [1, 2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/flights/1/seats/validate",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "flights", "1", "seats", "validate"]
+						},
+						"description": "Validate whether the given seat IDs are valid for a specific flight."
+					},
+					"response": []
+				},
+				{
+					"name": "Validate Flight",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"flightId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/flights/validate",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "flights", "validate"]
+						},
+						"description": "Validate whether a flight exists and is valid. Used internally by the Booking Service."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Airplanes",
+			"description": "Airplane management endpoints on the Flights Creation Service.",
+			"item": [
+				{
+					"name": "Create Airplane",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"modelNumber\": \"A320\",\n    \"capacity\": 180\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airplanes",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airplanes"]
+						},
+						"description": "Register a new airplane. Model number must be alphanumeric. Capacity must be between 1 and 1000."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Airplanes",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airplanes",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airplanes"]
+						},
+						"description": "Retrieve all registered airplanes."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Airplane by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airplanes/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airplanes", "1"]
+						},
+						"description": "Get a specific airplane by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Airplane",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"capacity\": 200\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airplanes/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airplanes", "1"]
+						},
+						"description": "Update an existing airplane's details."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Airplane",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airplanes/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airplanes", "1"]
+						},
+						"description": "Delete an airplane by its ID. Will cascade-delete associated flights."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Airports",
+			"description": "Airport management endpoints on the Flights Creation Service.",
+			"item": [
+				{
+					"name": "Create Airport",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Chhatrapati Shivaji Maharaj International Airport\",\n    \"code\": \"BOM\",\n    \"cityId\": 1,\n    \"address\": \"Mumbai, Maharashtra, India\"\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airports",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airports"]
+						},
+						"description": "Register a new airport. Requires a valid `cityId` referencing an existing city."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Airports",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airports",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airports"]
+						},
+						"description": "Retrieve all registered airports."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Airport by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airports/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airports", "1"]
+						},
+						"description": "Get a specific airport by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update Airport",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Updated Airport Name\"\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airports/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airports", "1"]
+						},
+						"description": "Update an existing airport's details."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Airport",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airports/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airports", "1"]
+						},
+						"description": "Delete an airport by its ID. Will cascade-delete associated flights."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Cities",
+			"description": "City management endpoints on the Flights Creation Service.",
+			"item": [
+				{
+					"name": "Create City",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Mumbai\"\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/cities",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "cities"]
+						},
+						"description": "Create a new city. City names must be unique."
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Cities",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/cities",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "cities"]
+						},
+						"description": "Retrieve all cities."
+					},
+					"response": []
+				},
+				{
+					"name": "Get City by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/cities/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "cities", "1"]
+						},
+						"description": "Get a specific city by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Update City",
+					"request": {
+						"method": "PATCH",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"New Mumbai\"\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/cities/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "cities", "1"]
+						},
+						"description": "Update an existing city's name."
+					},
+					"response": []
+				},
+				{
+					"name": "Delete City",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/cities/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "cities", "1"]
+						},
+						"description": "Delete a city by its ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Airlines",
+			"description": "Airline management endpoints on the Flights Creation Service.",
+			"item": [
+				{
+					"name": "Register Airline",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Air India\",\n    \"email\": \"admin@airindia.com\",\n    \"password\": \"securepassword\",\n    \"iataCode\": \"AI\",\n    \"icaoCode\": \"AIC\",\n    \"country\": \"India\",\n    \"contactNo\": \"9876543210\",\n    \"status\": \"active\",\n    \"logoIcon\": \"https://example.com/logo.png\"\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airlines",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airlines"]
+						},
+						"description": "Register a new airline. Creates a corresponding airline admin user account via the API Gateway's internal signup endpoint.\n\n- `iataCode` must be exactly 2 characters\n- `icaoCode` must be exactly 3 characters\n- `contactNo` must be 10-12 characters\n- `status` can be `active` or `inactive`"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Airline",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"name\": \"Air India Updated\",\n    \"country\": \"India\"\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airlines/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airlines", "1"]
+						},
+						"description": "Update an existing airline's details. Requires airline admin authorization."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Airline by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airlines/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airlines", "1"]
+						},
+						"description": "Get a specific airline by its ID."
+					},
+					"response": []
+				},
+				{
+					"name": "Register Airline Admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{authToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": 2\n}"
+						},
+						"url": {
+							"raw": "{{flightsCreationUrl}}/api/v1/airlines/admin/1",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["api", "v1", "airlines", "admin", "1"]
+						},
+						"description": "Register a user as an admin for a specific airline. Requires existing airline admin authorization. The `:airlineId` param specifies the airline."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Flight Search",
+			"description": "Flight search endpoints on the Flights Searching Service (port 3004). Can also be accessed via the gateway proxy at `/flightsSearchingService/api/v1/flights`.",
+			"item": [
+				{
+					"name": "Search Flights",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsSearchingUrl}}/api/v1/flights?trips=BOM-DEL",
+							"host": ["{{flightsSearchingUrl}}"],
+							"path": ["api", "v1", "flights"],
+							"query": [
+								{
+									"key": "trips",
+									"value": "BOM-DEL",
+									"description": "Route filter: departure-arrival airport codes"
+								}
+							]
+						},
+						"description": "Search flights with optional filters. Results are cached in Redis for performance.\n\nQuery parameters:\n- `trips` — Route filter (e.g., `BOM-DEL`)"
+					},
+					"response": []
+				},
+				{
+					"name": "Search Flights (via Gateway Proxy)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/flightsSearchingService/api/v1/flights?trips=BOM-DEL",
+							"host": ["{{baseUrl}}"],
+							"path": ["flightsSearchingService", "api", "v1", "flights"],
+							"query": [
+								{
+									"key": "trips",
+									"value": "BOM-DEL",
+									"description": "Route filter: departure-arrival airport codes"
+								}
+							]
+						},
+						"description": "Search flights through the API Gateway proxy. Same functionality as direct access."
+					},
+					"response": []
+				},
+				{
+					"name": "Get Flight by ID (Search Service)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsSearchingUrl}}/api/v1/flights/1",
+							"host": ["{{flightsSearchingUrl}}"],
+							"path": ["api", "v1", "flights", "1"]
+						},
+						"description": "Get a specific flight by ID via the Searching Service."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Bookings",
+			"description": "Booking management endpoints on the Flights Booking Service (port 3002). Can also be accessed via the gateway proxy at `/flightsBookingsService/api/v1/bookings`.",
+			"item": [
+				{
+					"name": "Create Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"flightId\": 1,\n    \"userId\": 1,\n    \"noOfSeats\": 2,\n    \"selectedSeats\": [1, 2]\n}"
+						},
+						"url": {
+							"raw": "{{flightsBookingUrl}}/api/v1/bookings",
+							"host": ["{{flightsBookingUrl}}"],
+							"path": ["api", "v1", "bookings"]
+						},
+						"description": "Create a new booking. The booking starts in `initiated` status.\n\n- `flightId` — ID of the flight to book\n- `userId` — ID of the user making the booking\n- `noOfSeats` — number of seats to book\n- `selectedSeats` — array of seat IDs to reserve"
+					},
+					"response": []
+				},
+				{
+					"name": "Make Payment",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookingId\": 1,\n    \"userId\": 1,\n    \"totalCost\": 9000\n}"
+						},
+						"url": {
+							"raw": "{{flightsBookingUrl}}/api/v1/bookings/payments",
+							"host": ["{{flightsBookingUrl}}"],
+							"path": ["api", "v1", "bookings", "payments"]
+						},
+						"description": "Process payment for a booking. Changes booking status from `initiated`/`pending` to `booked` and triggers a confirmation email notification via RabbitMQ."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Old Bookings",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{}"
+						},
+						"url": {
+							"raw": "{{flightsBookingUrl}}/api/v1/bookings/cancel",
+							"host": ["{{flightsBookingUrl}}"],
+							"path": ["api", "v1", "bookings", "cancel"]
+						},
+						"description": "Cancel old bookings that have been in `initiated` or `pending` status for too long. Typically triggered by a cron job."
+					},
+					"response": []
+				},
+				{
+					"name": "Cancel Booking by User",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"bookingId\": 1\n}"
+						},
+						"url": {
+							"raw": "{{flightsBookingUrl}}/api/v1/bookings/cancel-booking",
+							"host": ["{{flightsBookingUrl}}"],
+							"path": ["api", "v1", "bookings", "cancel-booking"]
+						},
+						"description": "Cancel a specific booking by its ID. Sets status to `cancelled` and restores the seats on the flight."
+					},
+					"response": []
+				},
+				{
+					"name": "Get User Bookings",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsBookingUrl}}/api/v1/bookings/user/1",
+							"host": ["{{flightsBookingUrl}}"],
+							"path": ["api", "v1", "bookings", "user", "1"]
+						},
+						"description": "Get all bookings for a specific user by their user ID."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Seat Bookings",
+			"description": "Seat booking endpoints on the Flights Booking Service.",
+			"item": [
+				{
+					"name": "Create Seat Booking",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"flightId\": 1,\n    \"userId\": 1,\n    \"selectedSeats\": [1, 2, 3]\n}"
+						},
+						"url": {
+							"raw": "{{flightsBookingUrl}}/api/v1/seats/bookings",
+							"host": ["{{flightsBookingUrl}}"],
+							"path": ["api", "v1", "seats", "bookings"]
+						},
+						"description": "Book specific seats on a flight. Creates individual seat booking records. Enforces unique constraint on (seat_id, flight_id) to prevent double-booking."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Health Checks",
+			"description": "Health check endpoints for all 5 microservices. Returns service status, uptime, timestamp, and external dependency health (Redis, etc.).",
+			"item": [
+				{
+					"name": "API Gateway Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": ["{{baseUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Health check for the API Gateway. Reports Redis connectivity status."
+					},
+					"response": []
+				},
+				{
+					"name": "Flights Booking Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsBookingUrl}}/health",
+							"host": ["{{flightsBookingUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Health check for the Flights Booking Service. Reports Redis connectivity status."
+					},
+					"response": []
+				},
+				{
+					"name": "Flights Creation Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsCreationUrl}}/health",
+							"host": ["{{flightsCreationUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Health check for the Flights Creation Service."
+					},
+					"response": []
+				},
+				{
+					"name": "Flights Searching Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{flightsSearchingUrl}}/health",
+							"host": ["{{flightsSearchingUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Health check for the Flights Searching Service. Reports Redis connectivity status."
+					},
+					"response": []
+				},
+				{
+					"name": "Notifications Service Health",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{notificationsUrl}}/health",
+							"host": ["{{notificationsUrl}}"],
+							"path": ["health"]
+						},
+						"description": "Health check for the Notifications Service."
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}

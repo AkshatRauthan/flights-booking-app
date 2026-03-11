@@ -1,49 +1,45 @@
 const { UserController } = require('../../controllers');
-const { AuthenticationMiddlewares, AuthorizationMiddlewares, ValidationMiddlewares } = require('../../middlewares');
+const { AuthenticationMiddlewares, AuthorizationMiddlewares } = require('../../middlewares');
+const validate = require('../../middlewares/validate');
+const { updateEmailSchema, updatePasswordSchema, addRoleSchema, idParamSchema } = require('../../middlewares/validators');
 
 const express = require('express');
 const router = express.Router();
 
-// /api/v1/user/:id DELETE
 router.delete('/:id',
-        AuthenticationMiddlewares.validateAuthToken,
-        AuthorizationMiddlewares.isAccountOwner,
-        UserController.deleteUserById,
+    AuthenticationMiddlewares.validateAuthToken,
+    AuthorizationMiddlewares.isAccountOwner,
+    UserController.deleteUserById,
 );
 
-// /api/v1/user/:id/email POST
 router.post('/:id/email',
-        AuthenticationMiddlewares.validateAuthToken,
-        AuthorizationMiddlewares.isAccountOwner,
-        ValidationMiddlewares.validateUpdateEmail,
-        UserController.updateUserEmailById,
+    AuthenticationMiddlewares.validateAuthToken,
+    AuthorizationMiddlewares.isAccountOwner,
+    validate(updateEmailSchema),
+    UserController.updateUserEmailById,
 );
 
-// /api/v1/user/:id/password POST
 router.post('/:id/password',
-        AuthenticationMiddlewares.validateAuthToken,
-        AuthorizationMiddlewares.isAccountOwner,
-        ValidationMiddlewares.validateUpdatePassword,
-        UserController.updateUserPasswordById,
+    AuthenticationMiddlewares.validateAuthToken,
+    AuthorizationMiddlewares.isAccountOwner,
+    validate(updatePasswordSchema),
+    UserController.updateUserPasswordById,
 );
 
-// /api/v1/user/role POST
 router.post('/role',
-        AuthenticationMiddlewares.validateAuthToken,
-        AuthorizationMiddlewares.isAdmin,
-        ValidationMiddlewares.validateAddRole,
-        UserController.addRoleToUser,
+    AuthenticationMiddlewares.validateAuthToken,
+    AuthorizationMiddlewares.isAdmin,
+    validate(addRoleSchema),
+    UserController.addRoleToUser,
 );
 
-// /api/v1/user/:id/email GET
 router.get('/:id/email',
-        ValidationMiddlewares.validateIdParam,
-        UserController.getUserEmailById,
+    validate(idParamSchema, 'params'),
+    UserController.getUserEmailById,
 );
 
-// /api/v1/user/validate POST
 router.post('/validate',
-        UserController.isValidUser
+    UserController.isValidUser,
 );
 
 module.exports = router;

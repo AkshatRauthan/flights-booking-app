@@ -1,4 +1,4 @@
-const { Booking } = require('../models');
+const { Booking, Seat_Booking } = require('../models');
 const { Op } = require('sequelize');
 const { StatusCodes } = require('http-status-codes');
 const CrudRepository = require('./crud-repositories');
@@ -59,6 +59,15 @@ class BookingRepository extends CrudRepository {
             }
         });
         return response;
+    }
+
+    async getBookingsByUserId(userId) {
+        const bookings = await Booking.findAll({
+            where: { userId },
+            include: [{ model: Seat_Booking, as: 'seatBookings' }],
+            order: [['createdAt', 'DESC']],
+        });
+        return bookings;
     }
 }
 

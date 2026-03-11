@@ -89,11 +89,13 @@ async function getFlight(id){
 async function getAllFlights(query) {
     let customFilter = parseFilterQuery(query);
     let sortFilter = parseOrderQuery(query);
+    const page = parseInt(query.page) || 1;
+    const limit = parseInt(query.limit) || 10;
     Logger.info(`Flight query: ${JSON.stringify(query)}`);
     try {
         Logger.info(`Custom Filter: ${JSON.stringify(customFilter)}`);
         Logger.info(`Sort Filter: ${JSON.stringify(sortFilter)}`);
-        const flights = await flightRepository.getAllFlights(customFilter, sortFilter);
+        const flights = await flightRepository.getAllFlights(customFilter, sortFilter, { page, limit });
         return flights;
     } catch (error) {
         Logger.error(error);

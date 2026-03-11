@@ -1,12 +1,15 @@
 const express = require("express");
 const amqplib = require("amqplib");
+const cron = require('node-cron');
 const helmet = require('helmet');
 const cors = require('cors');
+const xss = require('xss-clean');
 
 const { ServerConfig, Logger } = require("./config");
 const { EmailService } = require("./services");
 const apiRoutes = require("./routes");
 const { globalErrorHandler, notFoundHandler } = require("./middlewares/error-handler");
+const { correlationId } = require('./middlewares/correlation-id');
 
 const { GMAIL_EMAIL, RABBITMQ_USERNAME, RABBITMQ_PASSWORD, RABBITMQ_HOST } = ServerConfig;
 
@@ -14,6 +17,11 @@ const app = express();
 
 app.use(helmet());
 app.use(cors());
+app.use(xss());
+
+// Correlation ID
+app.use(correlationId);
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -26,13 +34,23 @@ async function connectQueue() {
         channel.consume("notification-queue", async (data) => {
             const object = JSON.parse(Buffer.from(data.content).toString());
             Logger.info(`Processing notification for: ${object.recipientEmail}`);
+            let ticket;
             try {
+                ticket = await EmailService.createTicket({
+                    subject: object.subject,
+                    content: object.content,
+                    recipientEmail: object.recipientEmail,
+                });
                 await EmailService.sendEmail(GMAIL_EMAIL, object.recipientEmail, object.subject, object.content);
+                await ticket.update({ status: 'success' });
                 channel.ack(data);
                 Logger.info(`Email sent successfully to: ${object.recipientEmail}`);
             } catch (error) {
                 Logger.error(`Failed to send email to ${object.recipientEmail}: ${error.message}`);
-                channel.nack(data, false, true); // Requeue on failure
+                if (ticket) {
+                    await ticket.update({ status: 'failed' });
+                }
+                channel.nack(data, false, false); // Don't requeue; cron will retry failed emails
             }
         });
     } catch (error) {
@@ -42,7 +60,7 @@ async function connectQueue() {
 }
 
 app.get('/health', (req, res) => {
-    res.status(200).json({ status: 'OK', service: 'notifications-service', timestamp: new Date().toISOString() });
+    res.status(200).json({ status: 'ok', service: 'notifications-service', uptime: process.uptime(), timestamp: new Date().toISOString() });
 });
 
 app.use('/api', apiRoutes);
@@ -54,6 +72,14 @@ const server = app.listen(ServerConfig.PORT, async () => {
     Logger.info(`Notifications Service started on port ${ServerConfig.PORT}`);
     await connectQueue();
     Logger.info("Connected to RabbitMQ notification queue");
+
+    // Retry failed emails every 10 minutes
+    cron.schedule('*/10 * * * *', async () => {
+        Logger.info('Running failed email retry cron');
+        const count = await EmailService.retryFailedEmails();
+        Logger.info(`Retried ${count} failed emails`);
+    });
+    Logger.info('Failed email retry cron scheduled (every 10 minutes)');
 });
 
 function gracefulShutdown(signal) {

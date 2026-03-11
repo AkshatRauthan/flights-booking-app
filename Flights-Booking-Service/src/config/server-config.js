@@ -14,4 +14,6 @@ module.exports = {
     RABBITMQ_USERNAME: process.env.RABBITMQ_USERNAME,
     RABBITMQ_PASSWORD: process.env.RABBITMQ_PASSWORD,
     RABBITMQ_QUEUE_NAME: process.env.RABBITMQ_QUEUE_NAME,
+    REDIS_HOST: process.env.REDIS_HOST,
+    REDIS_PORT: process.env.REDIS_PORT,
 }

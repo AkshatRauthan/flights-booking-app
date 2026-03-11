@@ -3,6 +3,7 @@ jest.mock('../../../src/config', () => ({
     Mailer: {
         sendMail: jest.fn(),
     },
+    ServerConfig: {},
 }));
 
 jest.mock('../../../src/repositories', () => ({
@@ -10,6 +11,20 @@ jest.mock('../../../src/repositories', () => ({
         create: jest.fn(),
         getPendingTickets: jest.fn(),
     })),
+}));
+
+jest.mock('../../../src/models', () => ({
+    Ticket: {
+        findAll: jest.fn().mockResolvedValue([]),
+    },
+}));
+
+jest.mock('../../../src/utils/common', () => ({
+    ENUMS: {
+        TICKET_STATUS_ENUMS: { FAILED: 'FAILED', SUCCESS: 'SUCCESS' },
+    },
+    createErrorResponse: jest.fn(),
+    createSuccessResponse: jest.fn(),
 }));
 
 const EmailService = require('../../../src/services/email-service');

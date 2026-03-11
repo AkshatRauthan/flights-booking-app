@@ -1,7 +1,9 @@
-const { AirlineController } = require('../../controllers')
-const { AuthMiddleware } = require('../../middlewares');
-
 const express = require('express');
+const { AirlineController } = require('../../controllers');
+const { AuthMiddleware } = require('../../middlewares');
+const validate = require('../../middlewares/validate');
+const { registerAirlineSchema } = require('../../middlewares/validators');
+
 const router = express.Router();
 
 const AirlineAdminRoutes = require('./airline-admin-routes');
@@ -11,9 +13,9 @@ router.use('/admin',
     AirlineAdminRoutes
 );
 
-
 // /api/v1/airlines POST
 router.post('/',
+    validate(registerAirlineSchema),
     AirlineController.registerAirlines
 );
 
@@ -21,7 +23,7 @@ router.post('/',
 router.post('/:id',
     AuthMiddleware.isAirlineAdmin,
     AirlineController.updateAirline
-)
+);
 
 // /api/v1/airlines/:id GET
 router.get('/:id',

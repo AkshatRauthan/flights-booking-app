@@ -1,17 +1,19 @@
 # ✈️ Flights Booking Application
 
-A production-ready **microservices-based flight booking system** built with Node.js, Express, MySQL, RabbitMQ, and Docker.
+A production-ready **microservices-based flight booking system** built with Node.js, Express, MySQL, RabbitMQ, Redis, and Docker.
 
 ## 📋 Table of Contents
 
 - [Architecture Overview](#architecture-overview)
 - [Services](#services)
 - [Tech Stack](#tech-stack)
+- [Key Features](#key-features)
 - [Getting Started](#getting-started)
 - [API Reference](#api-reference)
 - [Project Structure](#project-structure)
 - [Environment Variables](#environment-variables)
 - [Testing](#testing)
+- [CI/CD Pipeline](#cicd-pipeline)
 - [Docker Deployment](#docker-deployment)
 - [Contributing](#contributing)
 
@@ -27,8 +29,11 @@ A production-ready **microservices-based flight booking system** built with Node
 │                      API GATEWAY (:3001)                         │
 │  ┌─────────────┐ ┌──────────────┐ ┌────────────────────────┐    │
 │  │ Rate Limiter│ │ Auth (JWT)   │ │ Reverse Proxy          │    │
-│  │ (50/5min)   │ │ RBAC         │ │ (http-proxy-middleware) │    │
+│  │ (Redis)     │ │ RBAC         │ │ (http-proxy-middleware) │    │
 │  └─────────────┘ └──────────────┘ └────────────────────────┘    │
+│  ┌──────────────┐ ┌──────────────────┐ ┌──────────────┐        │
+│  │Correlation ID│ │ Zod Validation   │ │ Circuit Break│        │
+│  └──────────────┘ └──────────────────┘ └──────────────┘        │
 └─────┬──────────────────┬──────────────────┬─────────────────────┘
       │                  │                  │
       ▼                  ▼                  ▼
@@ -39,30 +44,32 @@ A production-ready **microservices-based flight booking system** built with Node
 │  (:3003)  │   │   (:3004)    │   │   (:3002)    │
 └─────┬─────┘   └──────┬───────┘   └──────┬───────┘
       │                │                   │
-      │                │                   │
-      ▼                │                   ▼
-┌───────────┐          │           ┌──────────────┐
-│  MySQL    │◀─────────┘           │  RabbitMQ    │
-│ (flights) │                      │  (messaging) │
-└───────────┘                      └──────┬───────┘
-                                          │
-                                          ▼
-                                  ┌──────────────┐
-                                  │Notifications │
-                                  │  Service     │
-                                  │  (:3005)     │
-                                  └──────────────┘
+      │           ┌────┴────┐         ┌────┴────┐
+      ▼           ▼         │         ▼         │
+┌───────────┐ ┌───────┐    │   ┌───────────┐   │
+│  MySQL    │ │ Redis │    │   │ RabbitMQ  │   │
+│ (flights) │ │ Cache │    │   │ (events)  │   │
+└───────────┘ └───────┘    │   └─────┬─────┘   │
+                           │         │         │
+                           │         ▼         │
+                           │  ┌──────────────┐ │
+                           │  │Notifications │ │
+                           │  │  Service     │ │
+                           │  │  (:3005)     │ │
+                           │  └──────────────┘ │
+                           │                   │
+                           └─────── MySQL ─────┘
 ```
 
 ## Services
 
 | Service | Port | Description |
 |---------|------|-------------|
-| **API Gateway** | 3001 | Authentication, authorization, rate limiting, reverse proxy routing |
-| **Flights Booking Service** | 3002 | Booking management, payment processing, seat booking, cron-based expiry |
-| **Flights Creation Service** | 3003 | CRUD for flights, airplanes, airports, cities, airlines, and airline admins |
-| **Flights Searching Service** | 3004 | Flight search proxy with caching layer (BFF pattern) |
-| **Notifications Service** | 3005 | Email notifications via RabbitMQ consumer using Gmail SMTP |
+| **API Gateway** | 3001 | Authentication, authorization, per-user Redis rate limiting, reverse proxy routing, correlation IDs |
+| **Flights Booking Service** | 3002 | Booking management, payment processing, seat booking, circuit breakers, cron-based expiry, user bookings & cancellation |
+| **Flights Creation Service** | 3003 | CRUD for flights, airplanes, airports, cities, airlines, and airline admins with paginated search |
+| **Flights Searching Service** | 3004 | Flight search proxy with Redis caching layer (BFF pattern) |
+| **Notifications Service** | 3005 | Email notifications via RabbitMQ consumer with retry logic for failed emails |
 
 ## Tech Stack
 
@@ -72,14 +79,42 @@ A production-ready **microservices-based flight booking system** built with Node
 | **Framework** | Express.js |
 | **Database** | MySQL 8.0 with Sequelize ORM |
 | **Message Queue** | RabbitMQ 3+ |
+| **Cache** | Redis 7+ (ioredis) |
 | **Authentication** | JWT + bcrypt |
 | **Service Auth** | AES-256-GCM encrypted tokens |
+| **Validation** | Zod schema validation |
+| **Resilience** | Opossum circuit breakers, retry with exponential backoff |
 | **Email** | Nodemailer (Gmail SMTP) |
-| **Logging** | Winston |
-| **Security** | Helmet, CORS, express-rate-limit |
+| **Logging** | Winston (structured, with correlation IDs) |
+| **Security** | Helmet, CORS, per-user Redis rate limiting |
 | **Scheduling** | node-cron |
-| **Testing** | Jest + Supertest |
+| **Testing** | Jest + Supertest (unit + integration) |
+| **CI/CD** | GitHub Actions |
 | **Containerization** | Docker + Docker Compose |
+
+## Key Features
+
+- **Redis Caching** — Flight search results cached in Redis for fast repeated queries
+- **Circuit Breaker Pattern** — Opossum circuit breakers on all inter-service HTTP calls (Booking → Creation, Booking → Gateway)
+- **Correlation IDs** — UUID-based `x-correlation-id` header propagated across all services for distributed tracing
+- **Zod Validation** — Schema-based input validation on all mutation endpoints across all services
+- **Per-User Rate Limiting** — Redis-backed rate limiter keyed by authenticated user ID (falls back to IP)
+- **Pagination** — Paginated flight search results with `page`, `limit`, and total count metadata
+- **User Bookings** — `GET /api/v1/bookings/user/:userId` to fetch all bookings for a user
+- **Cancel Booking** — `POST /api/v1/bookings/cancel-booking` for user-initiated booking cancellation with seat restoration
+- **Notification Retry** — Cron job retries failed email notifications every 10 minutes
+- **DB Indexing** — Strategic database indexes on frequently queried columns across all services
+- **Integration Tests** — Supertest-based integration tests with mocked external dependencies
+- **CI/CD Pipeline** — GitHub Actions workflow with MySQL, RabbitMQ, and Redis service containers
+- **RBAC Authorization** — Three roles: `system_admin`, `airline_admin`, `customer`
+- **Service-to-Service Auth** — AES-256-GCM encrypted tokens for internal communication
+- **Idempotent Payments** — Idempotency key support to prevent duplicate payments
+- **Automatic Booking Expiry** — Cron job cancels bookings older than 5 minutes
+- **Email Notifications** — Async booking confirmation emails via RabbitMQ
+- **Global Error Handling** — Consistent error response format across all services
+- **Health Checks** — `/health` endpoint on every service (includes Redis status)
+- **Graceful Shutdown** — SIGTERM/SIGINT handlers on all services
+- **Structured Logging** — Winston logger with file and console transports
 
 ## Getting Started
 
@@ -88,6 +123,7 @@ A production-ready **microservices-based flight booking system** built with Node
 - **Node.js** >= 20.x
 - **MySQL** >= 8.0
 - **RabbitMQ** >= 3.x
+- **Redis** >= 7.x
 - **npm** >= 9.x
 
 ### Local Development Setup
@@ -231,7 +267,9 @@ A production-ready **microservices-based flight booking system** built with Node
 |--------|----------|-------------|
 | POST | `/api/v1/bookings` | Create a booking |
 | POST | `/api/v1/bookings/payments` | Process payment (idempotent) |
-| POST | `/api/v1/bookings/cancel` | Cancel expired bookings |
+| POST | `/api/v1/bookings/cancel` | Cancel expired bookings (cron) |
+| GET | `/api/v1/bookings/user/:userId` | Get all bookings for a user |
+| POST | `/api/v1/bookings/cancel-booking` | Cancel a specific booking by ID |
 | POST | `/api/v1/seats/bookings` | Reserve seats |
 
 ### Flights Searching Service (Port 3004)
@@ -285,7 +323,8 @@ Each service follows the same internal structure:
 │   ├── services/             # Business logic layer
 │   └── utils/                # Shared utilities, errors, enums
 └── tests/
-    └── unit/                 # Unit tests (Jest)
+    ├── unit/                 # Unit tests (Jest)
+    └── integration/          # Integration tests (Jest + Supertest)
 ```
 
 ## Environment Variables
@@ -295,17 +334,24 @@ See `.env.example` in each service directory. Key variables:
 | Variable | Service | Description |
 |----------|---------|-------------|
 | `PORT` | All | Service port number |
+| `NODE_ENV` | All | Environment (`development`, `production`, `test`) |
+| `LOG_LEVEL` | All | Winston log level (`info`, `debug`, `warn`, `error`) |
 | `DB_HOST` | All (except Searching) | MySQL host |
 | `DB_USERNAME` | All (except Searching) | MySQL username |
 | `DB_PASSWORD` | All (except Searching) | MySQL password |
+| `DB_NAME` | All (except Searching) | MySQL database name |
 | `JWT_SECRET` | API Gateway | JWT signing secret |
 | `JWT_EXPIRY` | API Gateway | JWT token expiry (e.g., `1h`) |
 | `SALT_ROUNDS` | API Gateway | bcrypt salt rounds |
-| `SERVICE_SECRET` | Gateway + Creation | Service-to-service auth secret |
-| `RABBITMQ_USERNAME` | Booking + Notifications | RabbitMQ username |
-| `RABBITMQ_PASSWORD` | Booking + Notifications | RabbitMQ password |
+| `SERVICE_ENCRYPTION_KEY` | Gateway + Creation | AES-256-GCM key for service auth |
+| `SERVICE_TOKEN_EXPIRY_IN_SECONDS` | Gateway + Creation | Service token TTL |
+| `RABBITMQ_HOST` | Gateway, Booking, Creation, Notifications | RabbitMQ host |
+| `RABBITMQ_USERNAME` | Gateway, Booking, Creation, Notifications | RabbitMQ username |
+| `RABBITMQ_PASSWORD` | Gateway, Booking, Creation, Notifications | RabbitMQ password |
+| `REDIS_HOST` | Gateway, Booking, Searching | Redis host |
+| `REDIS_PORT` | Gateway, Booking, Searching | Redis port |
 | `GMAIL_EMAIL` | Notifications | Gmail address for sending |
-| `GMAIL_APP_PASSWORD` | Notifications | Gmail app password |
+| `GMAIL_PASS` | Notifications | Gmail app password |
 
 ## Testing
 
@@ -359,6 +405,7 @@ docker compose down -v
 | Container | Image | Ports |
 |-----------|-------|-------|
 | flights-mysql | mysql:8.0 | 3306 |
+| flights-redis | redis:7-alpine | 6379 |
 | flights-rabbitmq | rabbitmq:3-management | 5672, 15672 |
 | flights-api-gateway | custom | 3001 |
 | flights-booking-service | custom | 3002 |
@@ -368,19 +415,19 @@ docker compose down -v
 
 Access RabbitMQ Management UI at `http://localhost:15672` (default: guest/guest).
 
-## Key Features
+## CI/CD Pipeline
 
-- **RBAC Authorization** — Three roles: `system_admin`, `airline_admin`, `customer`
-- **Service-to-Service Auth** — AES-256-GCM encrypted tokens for internal communication
-- **Idempotent Payments** — Idempotency key support to prevent duplicate payments
-- **Automatic Booking Expiry** — Cron job cancels bookings older than 5 minutes
-- **Email Notifications** — Async booking confirmation emails via RabbitMQ
-- **Rate Limiting** — 50 requests per 5 minutes per IP
-- **Input Validation** — Request validation middleware on all mutation endpoints
-- **Global Error Handling** — Consistent error response format across all services
-- **Health Checks** — `/health` endpoint on every service
-- **Graceful Shutdown** — SIGTERM/SIGINT handlers on all services
-- **Structured Logging** — Winston logger with file and console transports
+The project uses **GitHub Actions** for continuous integration. The pipeline runs on every push to `main`/`develop` and on PRs to `main`.
+
+### Pipeline Jobs
+
+| Job | Description |
+|-----|-------------|
+| **Lint & Test** | Installs dependencies, runs Jest tests with coverage for each service using MySQL, Redis, and RabbitMQ service containers |
+| **Docker Build** | Builds Docker images for all services (runs on `main` branch only after tests pass) |
+| **Security Audit** | Runs `npm audit` on each service to check for known vulnerabilities |
+
+The CI config is at `.github/workflows/ci.yml`.
 
 ## Contributing
 

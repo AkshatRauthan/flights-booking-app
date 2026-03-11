@@ -1,8 +1,11 @@
 const { TicketRepository } = require('../repositories');
-const { Mailer } = require('../config');
-const { Logger } = require('../config');
+const { Mailer, Logger, ServerConfig } = require('../config');
+const { Ticket } = require('../models');
+const { ENUMS } = require('../utils/common');
 const AppError = require("../utils/errors/app-error");
 const { StatusCodes } = require('http-status-codes');
+
+const { FAILED, SUCCESS } = ENUMS.TICKET_STATUS_ENUMS;
 
 const ticketRepository = new TicketRepository();
 
@@ -43,8 +46,26 @@ async function getPendingEmails(){
     }
 }
 
+async function retryFailedEmails() {
+    const failedTickets = await Ticket.findAll({
+        where: { status: FAILED },
+        limit: 10,
+    });
+    for (const ticket of failedTickets) {
+        try {
+            await sendEmail(ServerConfig.GMAIL_EMAIL, ticket.recipientEmail, ticket.subject, ticket.content);
+            await ticket.update({ status: SUCCESS });
+            Logger.info(`Retry successful for ticket ${ticket.id}`);
+        } catch (error) {
+            Logger.error(`Retry failed for ticket ${ticket.id}`, error);
+        }
+    }
+    return failedTickets.length;
+}
+
 module.exports = {
     sendEmail,
     createTicket,
     getPendingEmails,
+    retryFailedEmails,
 }
