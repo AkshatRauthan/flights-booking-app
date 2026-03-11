@@ -5,24 +5,6 @@ const express = require('express');
 const router = express.Router();
 
 // /api/v1/user/:id DELETE
-/**
- * @swagger
- * /api/v1/user/{id}:
- *   delete:
- *     summary: Delete a user by ID
- *     tags: [User]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: User deleted successfully
- *       401:
- *         description: Unauthorized
- */
 router.delete('/:id',
         AuthenticationMiddlewares.validateAuthToken,
         AuthorizationMiddlewares.isAccountOwner,
@@ -30,31 +12,6 @@ router.delete('/:id',
 );
 
 // /api/v1/user/:id/email POST
-/**
- * @swagger
- * /api/v1/user/{id}/email:
- *   post:
- *     summary: Update user email
- *     tags: [User]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               email:
- *                 type: string
- *     responses:
- *       200:
- *         description: Email updated successfully
- */
 router.post('/:id/email',
         AuthenticationMiddlewares.validateAuthToken,
         AuthorizationMiddlewares.isAccountOwner,
@@ -62,31 +19,6 @@ router.post('/:id/email',
 );
 
 // /api/v1/user/:id/password POST
-/**
- * @swagger
- * /api/v1/user/{id}/password:
- *   post:
- *     summary: Update user password
- *     tags: [User]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               password:
- *                 type: string
- *     responses:
- *       200:
- *         description: Password updated successfully
- */
 router.post('/:id/password',
         AuthenticationMiddlewares.validateAuthToken,
         AuthorizationMiddlewares.isAccountOwner,
@@ -94,27 +26,6 @@ router.post('/:id/password',
 );
 
 // /api/v1/user/role POST
-/**
- * @swagger
- * /api/v1/user/role:
- *   post:
- *     summary: Add a role to a user
- *     tags: [User]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               role:
- *                 type: string
- *               userId:
- *                 type: integer
- *     responses:
- *       200:
- *         description: Role added successfully
- */
 router.post('/role',
         AuthenticationMiddlewares.validateAuthToken,
         AuthorizationMiddlewares.isAdmin,
@@ -122,37 +33,11 @@ router.post('/role',
 );
 
 // /api/v1/user/:id/email GET
-/**
- * @swagger
- * /api/v1/user/{id}/email:
- *   get:
- *     summary: Get user email by ID
- *     tags: [User]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: integer
- *     responses:
- *       200:
- *         description: User email retrieved successfully
- */
 router.get('/:id/email',
         UserController.getUserEmailById,
 );
 
 // /api/v1/user/validate POST
-/**
- * @swagger
- * /api/v1/user/validate:
- *   post:
- *     summary: Validate user
- *     tags: [User]
- *     responses:
- *       200:
- *         description: User is valid
- */
 router.post('/validate',
         UserController.isValidUser
 );

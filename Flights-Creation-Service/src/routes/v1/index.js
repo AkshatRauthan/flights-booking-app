@@ -4,7 +4,6 @@ const { v4 : uuid } = require("uuid");
 const router = express.Router();
 
 const { QueueConfig } = require('../../config');
-const swaggerSpec = require("../../config/swagger-config");
 const { createAirlineAdminReq, getAirlineAdminRes } = QueueConfig;
 
 const AirplaneRoutes = require('./airplane-routes');
@@ -18,10 +17,6 @@ router.use('/airlines', AirlineRoutes);
 router.use('/airports', AirportRoutes);
 router.use('/flights', FlightRoutes);
 router.use('/cities', CityRoutes);
-
-router.get('/api-docs/json', (req, res) => {
-    res.json(swaggerSpec);
-});
 
 // Test route for testing the working of queue
 router.get('/test', async (req, res) => {

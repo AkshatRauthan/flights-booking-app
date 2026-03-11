@@ -1,5 +1,4 @@
 const express = require("express");
-const swaggerUi = require('swagger-ui-express');
 const rateLimit = require('express-rate-limit'); 
 
 const { ServerConfig, Logger, QueueConfig } = require("./config")
@@ -9,17 +8,6 @@ const { createProxyMiddleware } = require('http-proxy-middleware');
 const { FLIGHT_BOOKING_SERVICE, FLIGHT_CREATION_SERVICE, FLIGHT_SEARCHING_SERVICE } = require("./config/server-config");
 
 const app = express();
-
-const options = { explorer: true,
-    swaggerOptions: {
-        urls: [
-            { url: '/flightsCreationService/api/v1/api-docs/json', name: 'Flights Creation Service' },
-            { url: '/flightsSearchingService/api/v1/api-docs/json', name: 'Flights Searching Service' },
-            { url: '/flightsBookingsService/api/v1/api-docs/json', name: 'Flights Booking Service' },
-            { url: '/api/v1/api-docs/json', name: 'Auth/API-Gateway Service' }
-        ]
-    }
-};
 
 const limiter = rateLimit({ // Limit Max Requests From an IP to 50 requests per 5 minute.
     window: 5 * 60 * 1000,
@@ -47,7 +35,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(limiter);
 
 app.use('/api', apiRoutes);
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(null, options));
 
 app.listen(ServerConfig.PORT, async () => {
     console.log(`\nSuccessfully started the server on port ${ServerConfig.PORT}`);
