@@ -1,10 +1,11 @@
 const { StatusCodes } = require('http-status-codes');
 const AppError = require('../utils/errors/app-error');
 const { UserService } = require('../services');
+const { Logger } = require('../config');
 
 async function validateAuthRequest(req, res, next) {
-    console.log("Hello1");
-    console.log(req.body);
+    Logger.info("validateAuthRequest called");
+    Logger.info(`Request body: ${JSON.stringify(req.body)}`);
     if (!req.body.email || !req.body.password) {
         let explanation = [];
         if (!req.body.email) {
@@ -15,7 +16,7 @@ async function validateAuthRequest(req, res, next) {
         }
         throw new AppError(explanation.join(' .'), StatusCodes.BAD_REQUEST);
     }
-    console.log("Hello");
+    Logger.info("Auth request validated successfully");
     next();
 };
 
@@ -28,7 +29,7 @@ async function validateAuthToken(req, res, next) {
             next();
         }
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw new AppError("Something went wrong while validating the authentication token", StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }

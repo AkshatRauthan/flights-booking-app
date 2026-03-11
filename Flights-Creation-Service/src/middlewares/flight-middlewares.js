@@ -1,8 +1,9 @@
 const { StatusCodes } = require('http-status-codes');
 
-const { ErrorResponse } = require('../utils/common');
+const { createErrorResponse } = require('../utils/common');
 
 const AppError = require('../utils/errors/app-error');
+const { Logger } = require('../config');
 
 function validateCreateObject(req, res, next){
     const { flightNumber, airplaneId, departureAirportId, arrivalAirportId, 
@@ -18,11 +19,9 @@ function validateCreateObject(req, res, next){
         if (!departureTime) explanation.push('Departure time not present in the incoming request in the correct format');
         if (!price) explanation.push('Price not present in the incoming request in the correct format');
         
-        ErrorResponse.message = 'Something went wrong while creating the flight';
-        ErrorResponse.error = new AppError(explanation, StatusCodes.BAD_REQUEST);
         return res
                 .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse);
+                .json(createErrorResponse(new AppError(explanation, StatusCodes.BAD_REQUEST), 'Something went wrong while creating the flight'));
     }
     else next();
 }
@@ -30,16 +29,14 @@ function validateCreateObject(req, res, next){
 function validateUpdateSeatsRequest(req, res, next) {
     if (!req.body.seats || req.body.seats < 0 || (req.body.dec && !([true, false, 'true', 'false'].includes(req.body.dec)))){
         let explanation = [];
-        console.log(req.body);
+        Logger.info(`Update seats request body: ${JSON.stringify(req.body)}`);
         if (!req.body.seats) explanation.push("Seats count not found in the incomong request body");
         if (req.body.seats < 0) explanation.push("Seats count cannot be negative");
         if (!([true, false, "true", "false"].includes(req.body.dec))) explanation.push("Unexpected value for dec in the incoming request body");
-        ErrorResponse.message = 'Something went wrong while updating the flight';
-        console.log(explanation);
-        ErrorResponse.error = new AppError(explanation, StatusCodes.BAD_REQUEST);
+        Logger.warn(`Validation errors: ${JSON.stringify(explanation)}`);
         return res
                 .status(StatusCodes.BAD_REQUEST)
-                .json(ErrorResponse);
+                .json(createErrorResponse(new AppError(explanation, StatusCodes.BAD_REQUEST), 'Something went wrong while updating the flight'));
     }
     else next();
 }

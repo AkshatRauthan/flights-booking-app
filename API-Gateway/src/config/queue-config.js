@@ -1,6 +1,7 @@
 const amqplib = require("amqplib");
 
 const { RABBITMQ_USERNAME, RABBITMQ_PASSWORD, RABBITMQ_HOST, AIRLINE_ADMIN_RES_QUEUE, AIRLINE_ADMIN_REQ_QUEUE } = require("./server-config")
+const Logger = require('./logger-config');
 let connection, channel;
 
 async function connectQueue(){
@@ -9,16 +10,16 @@ async function connectQueue(){
         channel = await connection.createChannel();
         await channel.assertQueue(AIRLINE_ADMIN_REQ_QUEUE);
         await channel.assertQueue(AIRLINE_ADMIN_RES_QUEUE);
-        console.log("Listening for requests");
+        Logger.info("Listening for requests");
         channel.consume(AIRLINE_ADMIN_REQ_QUEUE, async (msg) => {
             if (msg !== null) {
                 const data = JSON.parse(msg.content.toString());
-                console.log("Received message:", data);
+                Logger.info(`Received message: ${JSON.stringify(data)}`);
                 await generateUser(data, msg);
             }
         });
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }   
 }
@@ -27,24 +28,24 @@ async function sendData(data, queueName){
     try {
         await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data)));
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }
 }
 
 async function generateUser(data, msg){
-    console.log("Queue Recieved Successfully");
-    console.log(data);
-    console.log("Generating User");
+    Logger.info("Queue Recieved Successfully");
+    Logger.info(`Queue data: ${JSON.stringify(data)}`);
+    Logger.info("Generating User");
 
     let res = {data : {
         ...data,
         userId: 100,
     }}
 
-    console.log("Sending Response to Queue");
+    Logger.info("Sending Response to Queue");
     await sendData(data, AIRLINE_ADMIN_RES_QUEUE);
-    console.log("Response Sent Successfully");
+    Logger.info("Response Sent Successfully");
     channel.ack(msg);
 }
 

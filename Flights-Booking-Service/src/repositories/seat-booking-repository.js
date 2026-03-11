@@ -50,8 +50,7 @@ class SeatBookingRepository extends CrudRepository {
         const response = await Seat_Booking.update(data, {
             where: {
                 id: id
-            }
-        }, {
+            },
             transaction: transaction
         });
         if (!response || response[0] == 0){

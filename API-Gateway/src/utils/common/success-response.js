@@ -1,8 +1,10 @@
-const error = {
-    success: true,
-    message:'Request Successful',
-    data: {},
-    error:{}
-};
+function createSuccessResponse(data = {}, message = 'Request Successful') {
+    return {
+        success: true,
+        message,
+        data,
+        error: {}
+    };
+}
 
-module.exports = error;
+module.exports = createSuccessResponse;

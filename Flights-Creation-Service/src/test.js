@@ -1,5 +1,6 @@
 const { CustomAuthFunctions } = require("./utils/common");
 const { encryptServicePayload, decryptServiceToken } = CustomAuthFunctions;
+const { Logger } = require('./config');
 
 async function testEncryptionDecryption() {
 
@@ -10,10 +11,10 @@ async function testEncryptionDecryption() {
     };
 
     const enc = encryptServicePayload(payload);
-    console.log("Encrypted Payload:\n", enc);
+    Logger.info(`Encrypted Payload: ${enc}`);
 
     const dec = decryptServiceToken(enc);
-    console.log("Decrypted Payload:\n", dec);
+    Logger.info(`Decrypted Payload: ${JSON.stringify(dec)}`);
 }
 
 module.exports = {

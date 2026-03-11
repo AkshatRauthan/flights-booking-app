@@ -3,6 +3,7 @@ const AppError = require("../utils/errors/app-error");
 const { StatusCodes } = require("http-status-codes");
 const { AuthFunctions, ENUMS } = require("../utils/common");
 const db = require("../models");
+const { Logger } = require('../config');
 
 const { SYSTEM_ADMIN, CUSTOMER, AIRLINE_ADMIN } = ENUMS.USER_ROLES_ENUMS;
 
@@ -14,12 +15,12 @@ const userRoleRepository = new UserRoleRepository();
 async function createUser(data) {
     try {
         const user = await userRepository.create(data);
-        console.log(data);
+        Logger.info(`User created with role: ${data.role}`);
         const role =  await roleRepository.getRoleByName(data.role)
         user.addRole(role); // Role => User can also be An Airline Admin. So in line update logic to get role along with id.
         return user;
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         if (error instanceof AppError) throw error;
         if (['SequelizeValidationError', 'SequelizeUniqueConstraintError'].includes(error.name)) {
             let explanation = [];
@@ -47,12 +48,12 @@ async function authenticateUser(data) {
             }
             else {
                 const authToken = await AuthFunctions.createAuthToken({ id: user.id, email: user.email, role: rolename });
-                console.log(authToken);
+                Logger.info(`Auth token generated for user: ${user.email}`);
                 return { authToken };
             }
         }
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         if (error instanceof AppError) throw error;
         throw new AppError('Something Went Wrong', StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -71,7 +72,7 @@ async function isAirlineAdmin(userId){
         return user.hasRole(adminRole);
     } catch (error) {
         if (error instanceof AppError) throw error;
-        console.log(error);
+        Logger.error(error);
         throw new AppError('Something went wrong', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }

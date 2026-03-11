@@ -1,6 +1,7 @@
 const CrudRepsitory= require('./crud-repository');
 const { ENUMS } = require('../utils/common')
 const { Ticket } = require('../models')
+const { Logger } = require('../config');
 
 const { PENDING, SUCCESS, FAILED } = ENUMS;
 
@@ -18,7 +19,7 @@ class TicketRepository extends CrudRepsitory {
             })
             return response;
         } catch (error) {
-            console.log(error);
+            Logger.error(error);
             throw error;
         }
     }

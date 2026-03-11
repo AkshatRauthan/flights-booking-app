@@ -1,6 +1,7 @@
 const amqplib = require("amqplib");
 
 const { RABBITMQ_USERNAME, RABBITMQ_PASSWORD, RABBITMQ_HOST, AIRLINE_ADMIN_REQ_QUEUE, AIRLINE_ADMIN_RES_QUEUE } = require("./server-config")
+const Logger = require('./logger-config');
 let connection, channel;
 
 async function connectQueue(){
@@ -10,7 +11,7 @@ async function connectQueue(){
         await channel.assertQueue(AIRLINE_ADMIN_REQ_QUEUE);
         await channel.assertQueue(AIRLINE_ADMIN_RES_QUEUE);
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }
 }
@@ -19,7 +20,7 @@ async function sendData(data, queueName){
     try {
         await channel.sendToQueue(queueName, Buffer.from(JSON.stringify(data)));
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }
 }
@@ -38,11 +39,11 @@ async function createAirlineAdminReq(data){
                 isAirlineAdmin: isAirlineAdmin
             }
         }, AIRLINE_ADMIN_REQ_QUEUE);
-        console.log("Data send successfully");
+        Logger.info("Data sent successfully");
         await getAirlineAdminRes(reqId);
-        console.log("Process Completed");
+        Logger.info("Process Completed");
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }
 }
@@ -55,8 +56,8 @@ async function getAirlineAdminRes(reqId) {
                     const data = JSON.parse(msg.content.toString());
                     if (data.data.reqId === reqId) {
                         channel.ack(msg);
-                        console.log("Data Recieved");
-                        console.log(data);
+                        Logger.info("Data Received");
+                        Logger.info(`Queue response data: ${JSON.stringify(data)}`);
                         resolve(data);
                     } else {
                         channel.nack(msg);
@@ -67,7 +68,7 @@ async function getAirlineAdminRes(reqId) {
             });
         });
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }
 }

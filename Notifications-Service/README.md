@@ -1,49 +1,82 @@
-This is a base node js project template, which anyone can use as it has been prepared, by keeping some of the most important code principles and project management recommendations. Feel free to change anything. 
+# Notifications Service
 
+Handles asynchronous email notifications for the Flights Booking Application. Consumes messages from RabbitMQ and sends emails via Gmail SMTP.
 
-`src` -> Inside the src folder all the actual source code regarding the project will reside, this will not include any kind of tests. (You might want to make separate tests folder)
+## Responsibilities
 
-Lets take a look inside the `src` folder
+- **RabbitMQ Consumer** — Listens to `notification-queue` for booking events
+- **Email Delivery** — Sends booking confirmation emails via Gmail SMTP (nodemailer)
+- **Ticket Management** — Tracks notification status (pending, success, failed)
+- **Retry Handling** — Failed messages are requeued for retry (nack with requeue)
 
- - `config` -> In this folder anything and everything regarding any configurations or setup of a library or module will be done. For example: setting up `dotenv` so that we can use the environment variables anywhere in a cleaner fashion, this is done in the `server-config.js`. One more example can be to setup you logging library that can help you to prepare meaningful logs, so configuration for this library should also be done here. 
+## How It Works
 
- - `routes` -> In the routes folder, we register a route and the corresponding middleware and controllers to it. 
+```
+Booking Service                   RabbitMQ                    Notifications Service
+     │                               │                              │
+     │  sendData(notification)        │                              │
+     │──────────────────────────────►│                              │
+     │                               │   consume(notification)      │
+     │                               │─────────────────────────────►│
+     │                               │                              │  sendEmail()
+     │                               │                              │──────────────►Gmail
+     │                               │         ack/nack             │
+     │                               │◄─────────────────────────────│
+```
 
- - `middlewares` -> they are just going to intercept the incoming requests where we can write our validators, authenticators etc. 
+### Message Format
+```json
+{
+  "recipientEmail": "user@example.com",
+  "subject": "Flight booked",
+  "content": "Flight Booked For FlightID: 5 with BookingID: 12"
+}
+```
 
- - `controllers` -> they are kind of the last middlewares as post them you call you business layer to execute the budiness logic. In controllers we just receive the incoming requests and data and then pass it to the business layer, and once business layer returns an output, we structure the API response in controllers and send the output. 
+## API Endpoints
 
- - `repositories` -> this folder contains all the logic using which we interact the DB by writing queries, all the raw queries or ORM queries will go here.
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/tickets` | Create a notification ticket |
 
- - `services` -> contains the buiness logic and interacts with repositories for data from the database
+## Database
 
- - `utils` -> contains helper methods, error classes etc.
+- **Database:** `notifications_db`
+- **Models:** Ticket (status: pending | success | failed)
 
+## Environment Variables
 
-### Setup the project
+| Variable | Description | Default |
+|----------|-------------|--------|
+| `PORT` | Server port | 3005 |
+| `DB_HOST` | MySQL host | localhost |
+| `DB_USERNAME` | MySQL username | — |
+| `DB_PASSWORD` | MySQL password | — |
+| `RABBITMQ_USERNAME` | RabbitMQ username | guest |
+| `RABBITMQ_PASSWORD` | RabbitMQ password | guest |
+| `RABBITMQ_HOST` | RabbitMQ host | localhost |
+| `GMAIL_EMAIL` | Sender Gmail address | — |
+| `GMAIL_APP_PASSWORD` | Gmail app password | — |
 
- - Download this template from github and open it in your favourite text editor. 
- - Go inside the folder path and execute the following command:
-  ```
-  npm install
-  ```
- - In the root directory create a `.env` file and add the following env variables
-    ```
-        PORT=<port number of your choice>
-    ```
-    ex: 
-    ```
-        PORT=3000
-    ```
- - go inside the `src` folder and execute the following command:
-    ```
-      npx sequelize init
-    ```
- - By executing the above command you will get migrations and seeders folder along with a config.json inside the config folder. 
- - If you're setting up your development environment, then write the username of your db, password of your db and in dialect mention whatever db you are using for ex: mysql, mariadb etc
- - If you're setting up test or prod environment, make sure you also replace the host with the hosted db url.
+### Gmail App Password Setup
+1. Enable 2-Factor Authentication on your Google account
+2. Go to Google Account → Security → App Passwords
+3. Generate a new app password for "Mail"
+4. Use the generated 16-character password as `GMAIL_APP_PASSWORD`
 
- - To run the server execute
- ```
- npm run dev
- ```
+## Setup
+
+```bash
+npm install
+cp .env.example .env
+npx sequelize-cli db:migrate
+npm start
+```
+
+## Testing
+
+```bash
+npm test
+```
+
+5 unit tests covering email service and error handling.

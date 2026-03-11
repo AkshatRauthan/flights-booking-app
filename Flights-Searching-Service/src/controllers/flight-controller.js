@@ -2,7 +2,8 @@ const { StatusCodes } = require('http-status-codes');
 
 const { FlightServices } = require('../services');
 
-const { ErrorResponse, SuccessResponse } = require('../utils/common');
+const { createErrorResponse, createSuccessResponse } = require('../utils/common');
+const { Logger } = require('../config');
 
 /*
 GET : /flights
@@ -17,17 +18,14 @@ GET : /flights
 async function getAllFlights(req, res){
     try {
         const response = await FlightServices.getAllFlights(req.query);
-        SuccessResponse.message = "Successfully fetched all the flights";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully fetched all the flights"));
     } catch (error) {
-        ErrorResponse.error = error;
-        console.log(error);
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -39,16 +37,13 @@ POST : /flights/:id
 async function getFlight(req, res) {
     try{
         const response = await FlightServices.getFlight(req.params.id);
-        SuccessResponse.message = "Successfully fetched the flight data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully fetched the flight data"));
     } catch(error){
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 

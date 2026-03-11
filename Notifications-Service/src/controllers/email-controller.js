@@ -1,7 +1,7 @@
 const { EmailService } = require('../services')
 
 const AppError = require('../utils/errors/app-error')
-const { SuccessResponse, ErrorResponse } = require("../utils/common");
+const { createSuccessResponse, createErrorResponse } = require("../utils/common");
 const { StatusCodes } = require('http-status-codes');
 
 async function createTicket(req, res){
@@ -11,15 +11,13 @@ async function createTicket(req, res){
             content: req.body.content,
             recipientEmail: req.body.recipientEmail
         });
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response));
     } catch (error) { 
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 

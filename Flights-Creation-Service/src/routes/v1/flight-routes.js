@@ -29,7 +29,7 @@ router.patch('/:id/seats',
 )
 
 // /api/v1/flights/:id/seats/validate POST
-router.post('/api/v1/flights/:id/seats/validate',
+router.post('/:id/seats/validate',
         FlightController.areValidSeats,
 )
 

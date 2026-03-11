@@ -1,0 +1,173 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: flights-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-rootpassword}
+      MYSQL_USER: ${DB_USERNAME:-flights_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-flights_password}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flights-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: flights-rabbitmq
+    restart: unless-stopped
+    environment:
+      RABBITMQ_DEFAULT_USER: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_DEFAULT_PASS: ${RABBITMQ_PASSWORD:-guest}
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - flights-network
+
+  api-gateway:
+    build: ./API-Gateway
+    container_name: flights-api-gateway
+    restart: unless-stopped
+    ports:
+      - "${API_GATEWAY_PORT:-3001}:3001"
+    environment:
+      PORT: 3001
+      DB_HOST: mysql
+      DB_USERNAME: ${DB_USERNAME:-flights_user}
+      DB_PASSWORD: ${DB_PASSWORD:-flights_password}
+      DB_NAME: api_gateway_db
+      JWT_SECRET: ${JWT_SECRET:-your-jwt-secret}
+      JWT_EXPIRY: ${JWT_EXPIRY:-1h}
+      SALT_ROUNDS: ${SALT_ROUNDS:-10}
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: rabbitmq
+      FLIGHT_CREATION_SERVICE: http://flights-creation-service:3003
+      FLIGHT_SEARCHING_SERVICE: http://flights-searching-service:3004
+      FLIGHT_BOOKING_SERVICE: http://flights-booking-service:3002
+      SERVICE_SECRET: ${SERVICE_SECRET:-your-service-secret}
+      SERVICE_TOKEN_EXPIRY_IN_SECONDS: ${SERVICE_TOKEN_EXPIRY:-300}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - flights-network
+
+  flights-booking-service:
+    build: ./Flights-Booking-Service
+    container_name: flights-booking-service
+    restart: unless-stopped
+    ports:
+      - "${BOOKING_SERVICE_PORT:-3002}:3002"
+    environment:
+      PORT: 3002
+      DB_HOST: mysql
+      DB_USERNAME: ${DB_USERNAME:-flights_user}
+      DB_PASSWORD: ${DB_PASSWORD:-flights_password}
+      DB_NAME: flights_booking_db
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: rabbitmq
+      FLIGHT_CREATION_SERVICE: http://flights-creation-service:3003
+      FLIGHT_SEARCHING_SERVICE: http://flights-searching-service:3004
+      API_GATEWAY: http://api-gateway:3001
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - flights-network
+
+  flights-creation-service:
+    build: ./Flights-Creation-Service
+    container_name: flights-creation-service
+    restart: unless-stopped
+    ports:
+      - "${CREATION_SERVICE_PORT:-3003}:3003"
+    environment:
+      PORT: 3003
+      DB_HOST: mysql
+      DB_USERNAME: ${DB_USERNAME:-flights_user}
+      DB_PASSWORD: ${DB_PASSWORD:-flights_password}
+      DB_NAME: flights_db
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: rabbitmq
+      API_GATEWAY: http://api-gateway:3001
+      SERVICE_SECRET: ${SERVICE_SECRET:-your-service-secret}
+      SERVICE_TOKEN_EXPIRY_IN_SECONDS: ${SERVICE_TOKEN_EXPIRY:-300}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - flights-network
+
+  flights-searching-service:
+    build: ./Flights-Searching-Service
+    container_name: flights-searching-service
+    restart: unless-stopped
+    ports:
+      - "${SEARCHING_SERVICE_PORT:-3004}:3004"
+    environment:
+      PORT: 3004
+      FLIGHT_CREATION_SERVICE: http://flights-creation-service:3003
+    depends_on:
+      - flights-creation-service
+    networks:
+      - flights-network
+
+  notifications-service:
+    build: ./Notifications-Service
+    container_name: flights-notifications-service
+    restart: unless-stopped
+    ports:
+      - "${NOTIFICATION_SERVICE_PORT:-3005}:3005"
+    environment:
+      PORT: 3005
+      DB_HOST: mysql
+      DB_USERNAME: ${DB_USERNAME:-flights_user}
+      DB_PASSWORD: ${DB_PASSWORD:-flights_password}
+      DB_NAME: notifications_db
+      RABBITMQ_USERNAME: ${RABBITMQ_USERNAME:-guest}
+      RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD:-guest}
+      RABBITMQ_HOST: rabbitmq
+      GMAIL_EMAIL: ${GMAIL_EMAIL}
+      GMAIL_APP_PASSWORD: ${GMAIL_APP_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - flights-network
+
+volumes:
+  mysql_data:
+  rabbitmq_data:
+
+networks:
+  flights-network:
+    driver: bridge

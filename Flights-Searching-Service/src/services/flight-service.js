@@ -5,17 +5,18 @@ const axios = require('axios');
 const { FLIGHT_CREATION_SERVICE } = require("./../config/server-config");
 
 const AppError = require('../utils/errors/app-error');
+const { Logger } = require('../config');
 
 async function getAllFlights(query) {
     try {
-        console.log(query);
+        Logger.info(`Flight search query: ${JSON.stringify(query)}`);
         const flights = await axios.get(`${FLIGHT_CREATION_SERVICE}/api/v1/flights`, {
             params: query
         });
         return flights.data.data;
     } catch (error) {
         if (error instanceof AppError) throw error;
-        console.log(error);
+        Logger.error(error);
         throw new AppError('Cannot fetch the data of requested flights', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
@@ -28,7 +29,7 @@ async function getFlight(id){
         return flight.data.data;
     } catch (error) {
         if (error instanceof AppError) throw error;
-        console.log(error);
+        Logger.error(error);
         throw new AppError('Cannot fetch the data of requested flight', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }

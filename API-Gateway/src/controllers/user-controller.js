@@ -1,9 +1,10 @@
 const { StatusCodes } = require('http-status-codes');
 const AppError = require('../utils/errors/app-error');
 const { UserService } = require('../services');
-const { SuccessResponse, ErrorResponse } = require('../utils/common');
+const { createSuccessResponse, createErrorResponse } = require('../utils/common');
 const { USER_ROLES_ENUMS } = require('../utils/common/enums');
-const { CUSTOEMR, AIRLINE_ADMIN, SYSTEM_ADMIN } = USER_ROLES_ENUMS;
+const { CUSTOMER, AIRLINE_ADMIN, SYSTEM_ADMIN } = USER_ROLES_ENUMS;
+const { Logger } = require('../config');
 
 async function updateUserEmailById(req, res){
     try {
@@ -12,17 +13,14 @@ async function updateUserEmailById(req, res){
             newEmail: req.body.newEmail,
             // password: req.body.password,
         });
-        SuccessResponse.data = user;
-        SuccessResponse.message = 'User email updated successfully';
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(user, 'User email updated successfully'));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -33,33 +31,27 @@ async function updateUserPasswordById(req, res){
             oldPassword: req.body.oldPassword,
             newPassword: req.body.newPassword,
         });
-        SuccessResponse.data = user;
-        SuccessResponse.message = 'User password updated successfully';
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(user, 'User password updated successfully'));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
 async function deleteUserById(req, res){
     try {
         const user = await UserService.deleteUserById(req.params.id);
-        SuccessResponse.data = user;
-        SuccessResponse.message = 'Role Added to User Successfully';
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(user, 'User deleted successfully'));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -76,16 +68,13 @@ async function addRoleToUser(req, res){
             userId: req.body.id,
             roleName: req.body.roleName,
         });
-        SuccessResponse.data = user;
-        SuccessResponse.message = 'Role Added to User Successfully';
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(user, 'Role Added to User Successfully'));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -98,16 +87,13 @@ async function getUserEmailById(req, res){
         const response = await UserService.getUserEmailById({
             userId: req.params.id,
         });
-        SuccessResponse.data = response;
-        SuccessResponse.message = 'Email found successfully';
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, 'Email found successfully'));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -115,19 +101,17 @@ async function isValidUser(req, res) {
     try {
         const id = req.body.id;
         const isValid = await UserService.isValidUser(id);
-        SuccessResponse.message = isValid ? "Requested Used is valid" : "Requested Used is not valid";
-        SuccessResponse.data = { 
-            isValid: isValid,
-        }
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(
+                    { isValid: isValid },
+                    isValid ? "Requested Used is valid" : "Requested Used is not valid"
+                ));
     } catch (error){
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 

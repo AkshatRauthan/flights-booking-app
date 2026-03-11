@@ -1,7 +1,8 @@
 const { AirlineServices } = require('../services');
 
 const { StatusCodes } = require('http-status-codes');
-const { ErrorResponse, SuccessResponse, ENUMS } = require('../utils/common');
+const { createErrorResponse, createSuccessResponse, ENUMS } = require('../utils/common');
+const { Logger } = require('../config');
 
 async function registerAirlines(req, res) {
     try {
@@ -16,18 +17,14 @@ async function registerAirlines(req, res) {
             password: req.body.adminPassword,
             status: ENUMS.AIRLINE_STATUS.ACTIVE
         });
-        SuccessResponse.message = "Successfully registered the airline and created its admin account";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully registered the airline and created its admin account"));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.message("Something went wrong while processing your request.")
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode || StatusCodes.INTERNAL_SERVER_ERROR)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error, "Something went wrong while processing your request."));
     }
 }
 
@@ -35,7 +32,7 @@ async function updateAirline(req, res){
     
     try {
         let obj = {};
-        console.log(req.body);
+        Logger.info(`Update airline request body: ${JSON.stringify(req.body)}`);
         if (req.body.name) obj["email"] = req.body.email;
         if (req.body.email) obj["email"] = req.body.email;
         if (req.body.country) obj["country"] = req.body.country;
@@ -46,36 +43,28 @@ async function updateAirline(req, res){
 
         const response = await AirlineServices.updateAirline(obj, req.params.id);
 
-        SuccessResponse.message = "Successfully updated the airline";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully updated the airline"));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.message = "Something went wrong while processing your request.";
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error, "Something went wrong while processing your request."));
     }
 }
 
 async function getAirlineById(req, res){
     try {
         const response = await AirlineServices.getAirlineById(req.params.id);
-        SuccessResponse.message = "Successfully fetched the airline";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully fetched the airline"));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.message = "Something went wrong while processing your request.";
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error, "Something went wrong while processing your request."));
     }
 }
 

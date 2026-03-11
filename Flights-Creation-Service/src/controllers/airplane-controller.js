@@ -2,7 +2,7 @@ const { StatusCodes } = require('http-status-codes');
 
 const { AirplaneServices } = require('../services');
 
-const { ErrorResponse, SuccessResponse } = require('../utils/common');
+const { createErrorResponse, createSuccessResponse } = require('../utils/common');
 
 /*
  * POST : /airplanes
@@ -14,16 +14,13 @@ async function createAirplane(req, res){
             modelNumber: req.body.modelNumber,
             capacity: req.body.capacity
         });
-        SuccessResponse.message = "Successfully created an airplane";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully created an airplane"));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -34,16 +31,13 @@ async function createAirplane(req, res){
 async function getAirplanes(req, res) {
     try {
         const response = await AirplaneServices.getAirplanes();
-        SuccessResponse.message = "Successfully fetched all the airplanes";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully fetched all the airplanes"));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -54,16 +48,13 @@ async function getAirplanes(req, res) {
 async function getAirplane(req, res) {
     try{
         const response = await AirplaneServices.getAirplane(req.params.id);
-        SuccessResponse.message = "Successfully fetched the airplane data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully fetched the airplane data"));
     } catch(error){
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -74,16 +65,13 @@ async function getAirplane(req, res) {
 async function destroyAirplane(req, res) {
     try{
         const response = await AirplaneServices.destroyAirplane(req.params.id);
-        SuccessResponse.message = "Successfully deleted the airplane data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully deleted the airplane data"));
     } catch(error){
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -97,16 +85,13 @@ async function updateAirplane(req, res){
         if (req.body.modelNumber) Object.assign(data, { modelNumber: req.body.modelNumber });
         if (req.body.capacity) Object.assign(data, { capacity: req.body.capacity });
         const response = await AirplaneServices.updateAirplane(req.params.id, data);
-        SuccessResponse.message = "Successfully updated the airplane data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully updated the airplane data"));
     } catch(error){
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 

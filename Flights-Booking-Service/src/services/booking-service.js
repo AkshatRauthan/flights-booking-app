@@ -7,6 +7,7 @@ const { ServerConfig, Queue } = require("../config");
 const AppError = require("../utils/errors/app-error");
 const { BookingRepository, SeatBookingRepository } = require("../repositories");
 const { getEmailById } = require("../utils/common/helpers/fetch-email");
+const { Logger } = require('../config');
 
 const { BOOKING_STATUS } = ENUMS;
 
@@ -91,9 +92,9 @@ async function makePayment(data) {
             throw new AppError("Booking is already cancelled", StatusCodes.BAD_REQUEST);
         }
         if (currentTime - bookingTime > 900000){ // 15 minute window in milliseconds => 900000ms
-            console.log("\nCurrent Time: ", currentTime);
-            console.log("Booking Time: ", bookingTime);
-            console.log(currentTime - bookingTime);
+            Logger.info(`Current Time: ${currentTime}`);
+            Logger.info(`Booking Time: ${bookingTime}`);
+            Logger.info(`Time difference: ${currentTime - bookingTime}`);
             await cancelBooking({
                 bookingId: data.bookingId, 
                 flightId: bookingDetails.flightId
@@ -118,7 +119,7 @@ async function makePayment(data) {
         await transaction.commit();
         return await bookingRepository.get(data.bookingId);
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         await transaction.rollback();
         throw error;
     }
@@ -130,7 +131,7 @@ async function cancelBooking(data){
         const bookingDetails = await bookingRepository.get(data.bookingId, transaction);
         if (bookingDetails.status == BOOKING_STATUS.CANCELLED){
             await transaction.commit();
-            console.log("Booking is already cancelled");
+            Logger.warn("Booking is already cancelled");
             return true;    
         }
         await axios.patch(`${ServerConfig.FLIGHT_CREATION_SERVICE}/api/v1/flights/${data.flightId}/seats`,{ 
@@ -152,14 +153,14 @@ async function cancelOldBookings() {
         const response = await bookingRepository.cancelOldBookings(currTime);
         return response;
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }
 }
 
 async function isValidBooking(id) {
     const response = await bookingRepository.get(id, false);
-    console.log(response);
+    Logger.info(`Booking validation response: ${JSON.stringify(response)}`);
     if (!response || response.length === 0) {
         return false;
     }

@@ -4,7 +4,7 @@ const axios = require('axios');
 const { ServerConfig } = require('../config');
 const { API_GATEWAY } = ServerConfig;
 const db = require("../models");
-const {v4 : uuid} = require("uuid")
+const { Logger } = require('../config');
 
 const { USER_ROLES_ENUMS } = require('../utils/common/enums');
 const { CUSTOMER, AIRLINE_ADMIN, SYSTEM_ADMIN } = USER_ROLES_ENUMS;
@@ -48,56 +48,53 @@ async function registerAirlines(data){
             }
         });
 
-        console.log("------------");
-        console.log(user);
+        Logger.info("------------");
+        Logger.info(`API response user: ${JSON.stringify(user.data)}`);
         user = user.data.data;
-        console.log("------------");
-        console.log(user);
-        console.log("------------");
-        console.log(airline.dataValues);
-        console.log("------------");
+        Logger.info("------------");
+        Logger.info(`Extracted user: ${JSON.stringify(user)}`);
+        Logger.info("------------");
+        Logger.info(`Airline data: ${JSON.stringify(airline.dataValues)}`);
+        Logger.info("------------");
         const airlineAdmin = await airlineAdminRepository.registerAirlineAdmin({
             user_id: user.id,
             airline_id: airline.dataValues.id,
         }, transaction);
+        await transaction.commit();
         return airline;
     } catch (error) {
-        console.log(error);
-        transaction.rollback();
+        Logger.error(`Error registering airline: ${error.message}`);
+        await transaction.rollback();
         if (error instanceof AppError) throw error;
-        return new AppError("Something went wrong while registering the airline",StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError("Something went wrong while registering the airline",StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
 async function updateAirline(data, id){
     const transaction = await db.sequelize.transaction();
     try {
-        console.log(data);
         const airline = await airlineRepository.updateAirline(data, id, transaction);
         if (!airline || airline.length === 0) {
-            return new AppError("Airline not found", StatusCodes.NOT_FOUND);
+            throw new AppError("Airline not found", StatusCodes.NOT_FOUND);
         }
-        transaction.commit();
+        await transaction.commit();
         return airline;
     } catch (error) {
-        console.log(error);
-        transaction.rollback();
+        Logger.error(`Error updating airline: ${error.message}`);
+        await transaction.rollback();
         if (error instanceof AppError) throw error;
-        return new AppError("Something went wrong while updating the airline",StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError("Something went wrong while updating the airline",StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
 async function getAirlineById(id){
-    const transaction = await db.sequelize.transaction();
     try {
-        const airline = await airlineRepository.getAirlineById(id, transaction);
-        transaction.commit();
+        const airline = await airlineRepository.getAirlineById(id);
         return airline;
     } catch (error) {
-        console.log(error);
-        transaction.rollback();
+        Logger.error(`Error fetching airline: ${error.message}`);
         if (error instanceof AppError) throw error;
-        return new AppError("Something went wrong while fetching the airline",StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError("Something went wrong while fetching the airline",StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 

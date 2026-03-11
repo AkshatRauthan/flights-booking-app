@@ -14,8 +14,7 @@ class UserRepository extends CrudRepository {
     async updateUserEmailById(id, email, transaction) {
         const updatedUser = await User.update(
             { email: email },
-            { where: { id: id } },
-            { transaction: transaction }
+            { where: { id: id }, transaction: transaction }
         );
         return updatedUser;
     }
@@ -23,8 +22,7 @@ class UserRepository extends CrudRepository {
     async updateUserPasswordById(id, hashedPassword, transaction){
         const updatedUser = await User.update(
             { password: hashedPassword },
-            { where: { id: id } },
-            { transaction: transaction }
+            { where: { id: id }, transaction: transaction }
         );
         return updatedUser;
     }
@@ -32,7 +30,8 @@ class UserRepository extends CrudRepository {
     async deleteUserById(id, transaction) {
         const deletedUser = await User.destroy({
             where: { id: id },
-        }, {transaction: transaction});
+            transaction: transaction
+        });
         return deletedUser;
     }
 }

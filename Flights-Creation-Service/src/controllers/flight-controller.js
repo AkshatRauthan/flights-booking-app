@@ -2,8 +2,9 @@ const { StatusCodes } = require('http-status-codes');
 
 const { FlightServices } = require('../services');
 
-const { ErrorResponse, SuccessResponse } = require('../utils/common');
+const { createErrorResponse, createSuccessResponse } = require('../utils/common');
 const AppError = require('../utils/errors/app-error');
+const { Logger } = require('../config');
 
 /*
 POST : /flights
@@ -30,19 +31,15 @@ async function createFlight(req, res){
             flightNumber: req.body.flightNumber,
             departureTime: req.body.departureTime,
             arrivalAirportId: req.body.arrivalAirportId,
-            arrivalAirportId: req.body.arrivalAirportId,
             departureAirportId: req.body.departureAirportId,
         });
-        SuccessResponse.message = "Successfully created an airport";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully created an airport"));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -61,16 +58,13 @@ async function updateSeats(req, res) {
             seats: req.body.seats,
             dec: (dec === 'false' || dec === false) ? false : true,
         })
-        SuccessResponse.message = "Successfully updates the seats data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully updates the seats data"));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -79,19 +73,17 @@ async function isValidFlight(req, res) {
     try {
         const id = req.body.id;
         const isValid = await FlightServices.isValidFlight(id);
-        SuccessResponse.message = isValid ? "Requested Flight is valid" : "Requested Flight is not valid";
-        SuccessResponse.data = { 
-            isValid: isValid,
-        }
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(
+                    { isValid: isValid },
+                    isValid ? "Requested Flight is valid" : "Requested Flight is not valid"
+                ));
     } catch (error){
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -103,19 +95,17 @@ async function areValidSeats(req, res) {
 
         // Think how we are going to implement it........................
 
-        SuccessResponse.message = isValid ? "Requested Seats are valid" : "Requested Seats are not valid";
-        SuccessResponse.data = { 
-            isValid: isValid,
-        }
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(
+                    { isValid: isValid },
+                    isValid ? "Requested Seats are valid" : "Requested Seats are not valid"
+                ));
     } catch (error){
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -123,38 +113,33 @@ async function getFlight(req, res){
     try {
         const id = req.params.id;
         const flight = await FlightServices.getFlight(id);
-        SuccessResponse.message = "Successfully fetched the flight details";
-        SuccessResponse.data = flight;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(flight, "Successfully fetched the flight details"));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse)
+                .json(createErrorResponse(error));
     }
 }
 
 async function getAllFlights(req, res){
     try {
-        console.log(req.query);
+        Logger.info(`Get all flights query: ${JSON.stringify(req.query)}`);
         let response = await FlightServices.getAllFlights(req.query);
-        SuccessResponse.message = "Successfully fetched all flights";
-        SuccessResponse.data = [];
+        let data = [];
         response.forEach(obj => {
-            SuccessResponse.data.push(obj.dataValues);
+            data.push(obj.dataValues);
         });
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(data, "Successfully fetched all flights"));
     } catch (error) {
-        ErrorResponse.error = error;
-        console.log(error);
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 

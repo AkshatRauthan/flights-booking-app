@@ -3,6 +3,7 @@ const AppError = require("../utils/errors/app-error");
 const { StatusCodes } = require("http-status-codes");
 const { AuthFunctions, ENUMS } = require("../utils/common");
 const db = require("../models");
+const { Logger } = require('../config');
 
 const { SYSTEM_ADMIN, CUSTOMER, AIRLINE_ADMIN } = ENUMS.USER_ROLES_ENUMS;
 
@@ -21,13 +22,13 @@ async function updateUserEmailById(data) {
         const updatedUser = await userRepository.updateUserEmailById(data.userId, data.newEmail, transaction);
 
         // RabbitMQ => acknowledge id
-        transaction.commit();
+        await transaction.commit();
         return updatedUser;
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         // RabbitMQ => acknowledge and insert again.
-        transaction.rollback();
-        console.log(error);
+        await transaction.rollback();
+        Logger.error(error);
         if (error instanceof AppError) throw error;
         throw new AppError("Something went wrong while updating the user email", StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -49,12 +50,12 @@ async function updateUserPasswordById(data){
         const updatedUser = await userRepository.updateUserPasswordById(data.userId, hashedPassword, transaction);
 
         // RabbitMQ => acknowledge id
-        transaction.commit();
+        await transaction.commit();
         return updatedUser;
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         // RabbitMQ => acknowledge and insert again.
-        transaction.rollback();
+        await transaction.rollback();
         if (error instanceof AppError) throw error;
         throw new AppError("Something went wrong while updating the user password", StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -67,13 +68,13 @@ async function deleteUserById(id) {
         const deleteuser = await userRepository.deleteUserById(id, transaction);
 
         // RabbitMQ => acknowledge id
-        transaction.commit();
+        await transaction.commit();
         return deleteuser;
 
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         // RabbitMQ => acknowledge and insert again.
-        transaction.rollback();
+        await transaction.rollback();
         if (error instanceof AppError) throw error;
         throw new AppError("Something went wrong while deleting the user", StatusCodes.INTERNAL_SERVER_ERROR);
     }
@@ -117,7 +118,7 @@ async function addRoleToUser(data){
         return user;
     } catch (error) {
         if (error instanceof AppError) throw error;
-        console.log(error);
+        Logger.error(error);
         throw new AppError('Something went wrong', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
@@ -135,7 +136,7 @@ async function isAdmin(userId){
         return user.hasRole(adminRole);
     } catch (error) {
         if (error instanceof AppError) throw error;
-        console.log(error);
+        Logger.error(error);
         throw new AppError('Something went wrong', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
@@ -151,7 +152,7 @@ async function getUserEmailById(data){
         };
     } catch (error) {
         if (error instanceof AppError) throw error;
-        console.log(error);
+        Logger.error(error);
         throw new AppError('Something went wrong', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }

@@ -1,5 +1,6 @@
 const CrudRepository = require('./crud-repositories');
 const { AirlineAdmin } = require('../models');
+const { Logger } = require('../config');
 
 class AirlineAdminRepository extends CrudRepository {
     constructor() {
@@ -7,7 +8,7 @@ class AirlineAdminRepository extends CrudRepository {
     }
 
     async registerAirlineAdmin(data, transaction){
-        console.log(data);
+        Logger.info(`Registering airline admin: ${JSON.stringify(data)}`);
         const response = await AirlineAdmin.create(data, {
             transaction: transaction
         });

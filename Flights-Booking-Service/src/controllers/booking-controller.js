@@ -1,15 +1,16 @@
 const { StatusCodes } = require('http-status-codes');
-const { SuccessResponse, ErrorResponse } = require('../utils/common');
+const { createSuccessResponse, createErrorResponse } = require('../utils/common');
 const { BookingService } = require('../services');
+const { Logger } = require('../config');
 const inMemDb = {};
 
 async function createBooking(req, res) {
-    console.log("\n");
-    console.log(req.body);
+    Logger.info(`Create booking request received`);
+    Logger.info(`Request body: ${JSON.stringify(req.body)}`);
     req.body.selectedSeats = JSON.parse(req.body.selectedSeats);
-    console.log(req.body.selectedSeats);
-    console.log(typeof req.body.selectedSeats);
-    console.log(typeof req.body.selectedSeats[0]);
+    Logger.info(`Selected seats: ${JSON.stringify(req.body.selectedSeats)}`);
+    Logger.info(`Selected seats type: ${typeof req.body.selectedSeats}`);
+    Logger.info(`First seat type: ${typeof req.body.selectedSeats[0]}`);
     try {
         const response = await BookingService.createBooking({
             flightId: req.body.flightId,
@@ -17,23 +18,21 @@ async function createBooking(req, res) {
             noOfSeats: req.body.noOfSeats,
             selectedSeats: req.body.selectedSeats
         });
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
 async function makePayment(req, res) {
     try {
-        console.log("Hello");
+        Logger.info("Processing payment request");
         const idempotencyKey = req.headers['x-idempotency-key'];
-        console.log("Idempotency Key :",idempotencyKey);
+        Logger.info(`Idempotency Key: ${idempotencyKey}`);
         if (!idempotencyKey){
             return res
                 .status(StatusCodes.BAD_REQUEST)
@@ -50,15 +49,13 @@ async function makePayment(req, res) {
             totalCost: req.body.totalCost,
         })
         inMemDb[idempotencyKey] = idempotencyKey;
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -66,34 +63,30 @@ async function isValidBooking(req, res) {
     try {
         const id = req.body.id;
         const isValid = await BookingService.isValidBooking(id);
-        SuccessResponse.message = isValid ? "Requested booking is valid" : "Requested booking is not valid";
-        SuccessResponse.data = { 
-            isValid: isValid,
-        }
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(
+                    { isValid: isValid },
+                    isValid ? "Requested booking is valid" : "Requested booking is not valid"
+                ));
     } catch (error){
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
 async function cancelOldBookings(req, res){
     try {
         const response = await BookingService.cancelOldBookings();
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 

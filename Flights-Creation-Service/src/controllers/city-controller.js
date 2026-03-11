@@ -2,7 +2,7 @@ const { StatusCodes } = require('http-status-codes');
 
 const { CityServices } = require('../services');
 
-const { ErrorResponse, SuccessResponse } = require('../utils/common');
+const { createErrorResponse, createSuccessResponse } = require('../utils/common');
 
 /*
  * POST : /city
@@ -13,16 +13,13 @@ async function createCity(req, res){
         const response = await CityServices.createCity({
             name: req.body.name
         });
-        SuccessResponse.message = "Successfully created an city";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully created an city"));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -33,16 +30,13 @@ async function createCity(req, res){
 async function getCities(req, res) {
     try {
         const response = await CityServices.getCities();
-        SuccessResponse.message = "Successfully fetched all the cities";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.OK)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully fetched all the cities"));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -53,16 +47,13 @@ async function getCities(req, res) {
 async function getCity(req, res) {
     try{
         const response = await CityServices.getCity(req.params.id);
-        SuccessResponse.message = "Successfully fetched the city data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully fetched the city data"));
     } catch(error){
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -73,16 +64,13 @@ async function getCity(req, res) {
 async function destroyCity(req, res) {
     try{
         const response = await CityServices.destroyCity(req.params.id);
-        SuccessResponse.message = "Successfully deleted the city data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully deleted the city data"));
     } catch(error){
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -95,16 +83,13 @@ async function updateCity(req, res){
         const response = await CityServices.updateCity(req.params.id, {
             name: req.body.name 
         });
-        SuccessResponse.message = "Successfully updated the city data";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully updated the city data"));
     } catch(error){
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 

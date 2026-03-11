@@ -1,7 +1,8 @@
 const { AirlineAdminServices } = require('../services');
 
 const { StatusCodes } = require('http-status-codes');
-const { ErrorResponse, SuccessResponse, ENUMS } = require('../utils/common');
+const { createErrorResponse, createSuccessResponse, ENUMS } = require('../utils/common');
+const { Logger } = require('../config');
 
 async function registerAirlineAdmin(req, res){
     try {
@@ -10,18 +11,14 @@ async function registerAirlineAdmin(req, res){
             password: req.body.password,
             airline_id: req.params.airlineId
         })
-        SuccessResponse.message = "Successfully registered new airline admin account";
-        SuccessResponse.data = response;
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(response, "Successfully registered new airline admin account"));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.message = "Something went wrong while processing your request"
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error, "Something went wrong while processing your request"));
     }
 }
 

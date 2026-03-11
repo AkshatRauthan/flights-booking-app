@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const AppError = require('../errors/app-error');
 const { StatusCodes } = require('http-status-codes');
+const { Logger } = require('../../config');
 
 const ALGORITHM = 'aes-256-gcm';
 const { SERVICE_ENCRYPTION_KEY, SERVICE_TOKEN_EXPIRY_IN_SECONDS, SERVICE_NAME } = require("../../config/server-config");
@@ -35,9 +36,9 @@ function decryptServiceToken(token) {
         const iv = combined.slice(0, IV_LENGTH);
         const authTag = combined.slice(IV_LENGTH, IV_LENGTH + 16);
         const encrypted = combined.slice(IV_LENGTH + 16);
-        console.log("iv :\n", iv);
-        console.log("authTag :\n", authTag);
-        console.log("encrypted :\n", encrypted);
+        Logger.info(`iv: ${iv.toString('hex')}`);
+        Logger.info(`authTag: ${authTag.toString('hex')}`);
+        Logger.info(`encrypted: ${encrypted.toString('hex')}`);
 
         const decipher = crypto.createDecipheriv(ALGORITHM, KEY, iv);
         decipher.setAuthTag(authTag);
@@ -46,10 +47,10 @@ function decryptServiceToken(token) {
         decrypted += decipher.final('utf8');
 
         const decToken =  JSON.parse(decrypted);
-        console.log("Decrypted Token: \n", decToken);
+        Logger.info(`Decrypted Token: ${JSON.stringify(decToken)}`);
         return decToken;
     } catch (err) {
-        console.log(err);
+        Logger.error(err);
         throw new Error('Invalid or tampered service token');
     }
 }
@@ -61,7 +62,7 @@ async function generateServiceToken() {
     };
 
     let finalToken = encryptServicePayload(payload);
-    console.log(finalToken);
+    Logger.info(`Generated service token: ${finalToken}`);
     return finalToken;
 }
 

@@ -1,49 +1,55 @@
-This is a base node js project template, which anyone can use as it has been prepared, by keeping some of the most important code principles and project management recommendations. Feel free to change anything. 
+# Flights Searching Service
 
+A Backend-for-Frontend (BFF) service that proxies flight search queries to the Flights Creation Service. Acts as an abstraction layer for client-facing search operations.
 
-`src` -> Inside the src folder all the actual source code regarding the project will reside, this will not include any kind of tests. (You might want to make separate tests folder)
+## Responsibilities
 
-Lets take a look inside the `src` folder
+- **Flight Search Proxy** — Forwards search queries with filters to Creation Service
+- **Single Flight Lookup** — Retrieves individual flight details
+- **Response Transformation** — Normalizes flight data for client consumption
 
- - `config` -> In this folder anything and everything regarding any configurations or setup of a library or module will be done. For example: setting up `dotenv` so that we can use the environment variables anywhere in a cleaner fashion, this is done in the `server-config.js`. One more example can be to setup you logging library that can help you to prepare meaningful logs, so configuration for this library should also be done here. 
+## API Endpoints
 
- - `routes` -> In the routes folder, we register a route and the corresponding middleware and controllers to it. 
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/api/v1/flights` | Search flights with query filters |
+| GET | `/api/v1/flights/:id` | Get specific flight details |
 
- - `middlewares` -> they are just going to intercept the incoming requests where we can write our validators, authenticators etc. 
+### Query Parameters
+| Parameter | Example | Description |
+|-----------|---------|-------------|
+| `trips` | `MUM-DEL` | Departure-Arrival airport code pair |
+| `price` | `1000-5000` | Price range |
+| `travellers` | `2` | Number of seats needed |
+| `tripDate` | `2024-12-25` | Date of travel |
+| `sort` | `price_ASC` | Sort order |
 
- - `controllers` -> they are kind of the last middlewares as post them you call you business layer to execute the budiness logic. In controllers we just receive the incoming requests and data and then pass it to the business layer, and once business layer returns an output, we structure the API response in controllers and send the output. 
+## Architecture Note
 
- - `repositories` -> this folder contains all the logic using which we interact the DB by writing queries, all the raw queries or ORM queries will go here.
+This service currently acts as a pass-through proxy to the Flights Creation Service using Axios. Future enhancements:
+- **Redis caching** for frequently searched routes
+- **Response aggregation** from multiple data sources
+- **Search analytics** and trending routes
 
- - `services` -> contains the buiness logic and interacts with repositories for data from the database
+## Environment Variables
 
- - `utils` -> contains helper methods, error classes etc.
+| Variable | Description | Default |
+|----------|-------------|--------|
+| `PORT` | Server port | 3004 |
+| `FLIGHT_CREATION_SERVICE` | Creation service URL | — |
 
+## Setup
 
-### Setup the project
+```bash
+npm install
+cp .env.example .env
+npm start
+```
 
- - Download this template from github and open it in your favourite text editor. 
- - Go inside the folder path and execute the following command:
-  ```
-  npm install
-  ```
- - In the root directory create a `.env` file and add the following env variables
-    ```
-        PORT=<port number of your choice>
-    ```
-    ex: 
-    ```
-        PORT=3000
-    ```
- - go inside the `src` folder and execute the following command:
-    ```
-      npx sequelize init
-    ```
- - By executing the above command you will get migrations and seeders folder along with a config.json inside the config folder. 
- - If you're setting up your development environment, then write the username of your db, password of your db and in dialect mention whatever db you are using for ex: mysql, mariadb etc
- - If you're setting up test or prod environment, make sure you also replace the host with the hosted db url.
+## Testing
 
- - To run the server execute
- ```
- npm run dev
- ```
+```bash
+npm test
+```
+
+6 unit tests covering flight service proxy and error handling.

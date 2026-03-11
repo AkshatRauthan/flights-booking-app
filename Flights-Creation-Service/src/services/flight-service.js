@@ -6,6 +6,7 @@ const { DateTimeHelpers, QueryParsers } = require('../utils/common');
 const { parseFilterQuery, parseOrderQuery } = QueryParsers;
 
 const AppError = require('../utils/errors/app-error');
+const { Logger } = require('../config');
 
 const { Op } = require('sequelize');
 
@@ -47,14 +48,20 @@ async function isValidFlight(id) {
     return true;
 }
 
-async function areValidSeats(flightId, seats){
-    // const response = await flightRepository.get(id, false);
-    // console.log(response);
-    return true;
-    if (!response || response.length === 0) {
+async function areValidSeats(flightId, seats) {
+    try {
+        const flight = await flightRepository.get(flightId);
+        if (!flight) {
+            return false;
+        }
+        if (seats.length > flight.totalSeats) {
+            return false;
+        }
+        return true;
+    } catch (error) {
+        Logger.error(`Error validating seats: ${error.message}`);
         return false;
     }
-    return true;
 }
 
 async function getFlight(id){
@@ -71,7 +78,7 @@ async function getFlight(id){
         flight.departureAirport.City = flight.departureAirport.City.dataValues;
         return flight;
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         if (error instanceof AppError) {
             throw error;
         }
@@ -82,16 +89,14 @@ async function getFlight(id){
 async function getAllFlights(query) {
     let customFilter = parseFilterQuery(query);
     let sortFilter = parseOrderQuery(query);
-    console.log(query);
+    Logger.info(`Flight query: ${JSON.stringify(query)}`);
     try {
-        console.log("Custom Filter: ");
-        console.log(customFilter);
-        console.log("Sort Filter: ");
-        console.log(sortFilter);
+        Logger.info(`Custom Filter: ${JSON.stringify(customFilter)}`);
+        Logger.info(`Sort Filter: ${JSON.stringify(sortFilter)}`);
         const flights = await flightRepository.getAllFlights(customFilter, sortFilter);
         return flights;
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw new AppError('Cannot fetch the flights data regarding the search query', StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }

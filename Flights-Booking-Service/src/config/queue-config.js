@@ -1,6 +1,7 @@
 const amqplib = require("amqplib");
 
 const { RABBITMQ_USERNAME, RABBITMQ_PASSWORD, RABBITMQ_HOST, RABBITMQ_QUEUE_NAME } = require("./server-config")
+const Logger = require('./logger-config');
 let connection, channel;
 
 async function connectQueue(){
@@ -9,7 +10,7 @@ async function connectQueue(){
         channel = await connection.createChannel();
         await channel.assertQueue(RABBITMQ_QUEUE_NAME);
     } catch (error) {  
-        console.log(error);
+        Logger.error(error);
         throw error;
     }   
 }
@@ -18,7 +19,7 @@ async function sendData(data){
     try {
         await channel.sendToQueue(RABBITMQ_QUEUE_NAME, Buffer.from(JSON.stringify(data)));
     } catch (error) {
-        console.log(error);
+        Logger.error(error);
         throw error;
     }
 }

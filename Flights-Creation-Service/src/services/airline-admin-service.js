@@ -1,7 +1,7 @@
 const { StatusCodes } = require('http-status-codes');
 const AppError = require('../utils/errors/app-error');
 const axios = require('axios');
-const { ServerConfig } = require('../config');
+const { ServerConfig, Logger } = require('../config');
 const { API_GATEWAY } = ServerConfig;
 const db = require("../models");
 
@@ -19,31 +19,30 @@ async function registerAirlineAdmin(data){
 
         const airlineAdmin = await airlineAdminRepository.registerAirlineAdmin({
             user_id: user.id,
-                airline_id: data.airline_id,
+            airline_id: data.airline_id,
         }, transaction);
 
+        await transaction.commit();
         return airlineAdmin;
     } catch (error) {
-        console.log(error);
-        transaction.rollback();
+        Logger.error(`Error registering airline admin: ${error.message}`);
+        await transaction.rollback();
         if (error instanceof AppError) throw error;
-        return new AppError("Something went wrong while registering the airline",StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError("Something went wrong while registering the airline admin", StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 
 async function validateAirlineAdmin(id, airlineId) {
     try {
         const airlineAdmin = await airlineAdminRepository.validateAirlineAdmin(id, airlineId);
-        console.log(airlineAdmin);
         if (!airlineAdmin) {
             return false;
         }
         return true;
     } catch (error) {
-        console.log(error);
-        transaction.rollback();
+        Logger.error(`Error validating airline admin: ${error.message}`);
         if (error instanceof AppError) throw error;
-        return new AppError("Something went wrong while validating the airline admin", StatusCodes.INTERNAL_SERVER_ERROR);
+        throw new AppError("Something went wrong while validating the airline admin", StatusCodes.INTERNAL_SERVER_ERROR);
     }
 }
 

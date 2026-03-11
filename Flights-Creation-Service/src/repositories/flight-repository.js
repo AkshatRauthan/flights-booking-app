@@ -5,6 +5,7 @@ const db = require("../models");
 const { addingRowLockOnFlights } = require("./queries");
 const AppError = require('../utils/errors/app-error');
 const { StatusCodes } = require('http-status-codes');
+const { Logger } = require('../config');
 
 class FlightRepository extends CrudRepsitory {
     constructor(){
@@ -96,7 +97,7 @@ class FlightRepository extends CrudRepsitory {
             return flight.reload();
         } catch (error) {
             await transaction.rollback();
-            console.log(error);
+            Logger.error(error);
             throw error;
         }
     }

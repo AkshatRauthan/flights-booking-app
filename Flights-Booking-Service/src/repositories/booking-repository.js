@@ -27,8 +27,9 @@ class BookingRepository extends CrudRepository {
         const response = await Booking.update(data, {
             where: {
                 id: id
-            }
-        }, {transaction: transaction});
+            },
+            transaction: transaction
+        });
         if (!response || response[0] == 0){
             throw new AppError('Unable to find the corresponding booking data', StatusCodes.NOT_FOUND);
         }

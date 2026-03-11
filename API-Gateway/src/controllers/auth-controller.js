@@ -1,9 +1,10 @@
 const { StatusCodes } = require('http-status-codes');
 const AppError = require('../utils/errors/app-error');
 const { AuthService } = require('../services');
-const { SuccessResponse, ErrorResponse } = require('../utils/common');
+const { createSuccessResponse, createErrorResponse } = require('../utils/common');
 const { USER_ROLES_ENUMS } = require('../utils/common/enums');
-const { CUSTOEMR, AIRLINE_ADMIN, SYSTEM_ADMIN } = USER_ROLES_ENUMS;
+const { CUSTOMER, AIRLINE_ADMIN, SYSTEM_ADMIN } = USER_ROLES_ENUMS;
+const { Logger } = require('../config');
 
 /*
 POST : /signup
@@ -18,21 +19,15 @@ async function createUser(req, res){
             email: req.body.email,
             password: req.body.password,
         };
-        obj["role"] = (req.body.isDatabaseAdmin)? SYSTEM_ADMIN: ((req.body.isAirlineAdmin)? AIRLINE_ADMIN: CUSTOEMR);
+        obj["role"] = (req.body.isDatabaseAdmin)? SYSTEM_ADMIN: ((req.body.isAirlineAdmin)? AIRLINE_ADMIN: CUSTOMER);
         const user = await AuthService.createUser(obj);
-        SuccessResponse.data = {
-            id: user.id,
-            email: user.email
-        };
-        SuccessResponse.message = 'User created successfully';
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse({ id: user.id, email: user.email }, 'User created successfully'));
     } catch (error) {
-        ErrorResponse.error = error;
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
@@ -49,17 +44,14 @@ async function authenticateUser(req, res){
             email: req.body.email,
             password: req.body.password,
         });
-        SuccessResponse.data = user;
-        SuccessResponse.message = 'User authenticated successfully';
         return res
                 .status(StatusCodes.CREATED)
-                .json(SuccessResponse);
+                .json(createSuccessResponse(user, 'User authenticated successfully'));
     } catch (error) {
-        console.log(error);
-        ErrorResponse.error = error;
+        Logger.error(error);
         return res
                 .status(error.statusCode)
-                .json(ErrorResponse);
+                .json(createErrorResponse(error));
     }
 }
 
